@@ -329,12 +329,13 @@
   <main class="wrap">
     <header>
       <h1>PAC Reader</h1>
-      <p class="lead">画像内の番号と数値項目を読み取り、整形してコピーします。</p>
+      <p class="lead">複数の画像をまとめて読み取り、番号・値A・値Bの3列に整形してコピーします。店舗や機種が混在していても構いません。</p>
     </header>
 
     <section class="card">
       <div class="privacy"><span class="dot"></span><span>選択した画像はアップロードせず、読み取り処理はSafari内で行います。初回のみOCRライブラリと認識データをCDNから読み込みます。</span></div>
       <h2 class="section-title">1. 画像を選択</h2>
+      <p class="lead" style="margin:0 0 12px">複数店舗・複数機種の画像を一度に選択できます。出力は画像内の流れを保ち、重複した同一台は統合します。</p>
       <label class="file-pick">
         <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/*" multiple>
         <span class="pick-face">＋ 画像を選択</span>
@@ -374,7 +375,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261007_145800.000</p>
+    <p class="footer-note">ver 20261007_181500.000</p>
   </main>
 
 <script>
@@ -405,7 +406,7 @@
   let issues = [];
   let debugLines = [];
   let busy = false;
-  const APP_VERSION = '20261007_145800.000';
+  const APP_VERSION = '20261007_181500.000';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -912,6 +913,7 @@
         const body = findBodyBounds(frame, x0, x1, titleEnd);
         const card = {
           frame, fileIndex, fileName: frame.file.name,
+          sourceOrder: fileIndex * 10000 + cards.length,
           titleBox: seg.titleBox, itemNumber: null, itemConfidence: null,
           itemMethod: null, itemRaw: '', itemAttempts: [], itemInferred: false,
           x0, x1, kind, top: body?.top ?? null, bottom: body?.bottom ?? null,
@@ -1070,6 +1072,14 @@
     warnings = [];
     issues = [];
 
+    /*
+     * 複数店舗・複数機種の画像を一度に扱う。
+     * 台番の全体昇順には並べ替えず、最初に画像内へ現れた順序を保持する。
+     * 同じ台番が複数画像にまたがって写った場合は重複統合する。
+     *
+     * 現在の配置では対象台の台番は一意なので、台番を重複キーに使える。
+     * 店舗・機種の判定はSheets側の「配置」に任せる。
+     */
     const groups = new Map();
     const unresolved = [];
 
@@ -1084,11 +1094,11 @@
 
     const rows = [];
 
-    for (const [itemNumber, candidates] of [...groups.entries()].sort((a, b) => a[0] - b[0])) {
+    for (const [itemNumber, candidates] of groups.entries()) {
       const usable = candidates.filter(isUsableComplete);
+      let chosen = null;
 
       if (usable.length) {
-        // 完全に読めた候補同士だけを比較する。不完全な重複候補はここでは異常にしない。
         const signatures = new Map();
         for (const c of usable) {
           const sig = `${c.valueA}\t${c.valueB}`;
@@ -1097,9 +1107,7 @@
         }
 
         if (signatures.size === 1) {
-          // 同値なら、OCR信頼度を含むスコアが最も高い候補を採用。
-          const chosen = [...usable].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
-          rows.push(chosen);
+          chosen = [...usable].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
 
           const discardedPartial = candidates.filter(c => c !== chosen && !isUsableComplete(c));
           if (discardedPartial.length) {
@@ -1109,9 +1117,7 @@
             debugLines.push(`${itemNumber}: 完全な重複候補 ${usable.length}件は値一致のため統合`);
           }
         } else {
-          // 完全候補同士で値が食い違う場合は、自動で決めない。表示用には最高スコア候補を残すが異常扱い。
-          const chosen = [...usable].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
-          rows.push(chosen);
+          chosen = [...usable].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
           const variants = [...signatures.keys()].map(v => v.replace('\t', ' / ')).join(' , ');
           addIssue(
             'conflict',
@@ -1119,31 +1125,33 @@
             { itemNumber }
           );
         }
-        continue;
+      } else {
+        chosen = [...candidates].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
+
+        if (candidates.every(c => c.captureState === 'partial')) {
+          addIssue(
+            'partial-only',
+            `${itemNumber}番は画像内に完全な読み取り領域がありません。`,
+            { itemNumber }
+          );
+        } else {
+          if (chosen.valueA == null) {
+            addIssue('missing-value-a', `${itemNumber}番の値Aを確定できませんでした。`, { itemNumber });
+          }
+          if (chosen.valueB == null) {
+            addIssue('missing-value-b', `${itemNumber}番の値Bを確定できませんでした。`, { itemNumber });
+          }
+        }
       }
 
-      // 完全に確定できる候補が1件もない。最も情報量の多い候補を表示し、異常扱いにする。
-      const chosen = [...candidates].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
-      rows.push(chosen);
-
-      if (candidates.every(c => c.captureState === 'partial')) {
-        addIssue(
-          'partial-only',
-          `${itemNumber}番は画像内に完全な読み取り領域がありません。`,
-          { itemNumber }
-        );
-      } else {
-        if (chosen.valueA == null) {
-          addIssue('missing-value-a', `${itemNumber}番の値Aを確定できませんでした。`, { itemNumber });
-        }
-        if (chosen.valueB == null) {
-          addIssue('missing-value-b', `${itemNumber}番の値Bを確定できませんでした。`, { itemNumber });
-        }
+      if (chosen) {
+        chosen.outputOrder = Math.min(...candidates.map(c => c.sourceOrder ?? (c.fileIndex * 10000)));
+        rows.push(chosen);
       }
     }
 
-    // 番号自体を確定できなかった候補は、完全/不完全を問わず診断対象に残す。
     for (const c of unresolved) {
+      c.outputOrder = c.sourceOrder ?? (c.fileIndex * 10000);
       rows.push(c);
       const attempts = c.itemAttempts.length
         ? c.itemAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(' / ')
@@ -1155,37 +1163,22 @@
       );
     }
 
-    rows.sort((a, b) => {
-      if (Number.isInteger(a.itemNumber) && Number.isInteger(b.itemNumber)) return a.itemNumber - b.itemNumber;
-      if (Number.isInteger(a.itemNumber)) return -1;
-      if (Number.isInteger(b.itemNumber)) return 1;
-      return a.fileIndex - b.fileIndex;
-    });
+    // 画像選択順 → 画像内の読み取り順を保持する。
+    rows.sort((a, b) => (a.outputOrder ?? 0) - (b.outputOrder ?? 0));
 
-    const itemNumbers = rows
-      .filter(r => Number.isInteger(r.itemNumber))
-      .map(r => r.itemNumber)
-      .sort((a, b) => a - b);
+    /*
+     * 旧版の「最小台番～最大台番まで全部連番であるべき」という検査は廃止。
+     * 複数店舗・複数機種を同時投入すると、正常でも大きな欠番が生じるため。
+     * 各画像内でOCRが1項目だけ落ちたケースは inferMissingItemNumbers() が
+     * 前後から一意に決まるときだけ補完する。
+     */
 
-    if (itemNumbers.length >= 2) {
-      const known = new Set(itemNumbers);
-      const missing = [];
-      for (let n = itemNumbers[0]; n <= itemNumbers[itemNumbers.length - 1]; n++) {
-        if (!known.has(n)) missing.push(n);
-      }
-      if (missing.length && missing.length <= 8) {
-        addIssue('missing-sequence', `番号に欠番があります: ${missing.join(', ')}`, { missing });
-      }
-    }
-
-    // 一意補完は正常扱い。ユーザー警告には出さず診断ログだけに残す。
     for (const c of cards) {
       if (c.itemInferred && Number.isInteger(c.itemNumber)) {
         debugLines.push(`${c.itemNumber}: 番号を前後関係から一意に補完`);
       }
     }
 
-    // ユーザー向け表示は、最終的に対応が必要な異常だけ。
     warnings = issues.map(i => i.message);
     return rows;
   }
@@ -1260,6 +1253,7 @@
     lines.push(`状態: ${hasReadingIssue() ? '読み取り異常' : '正常'}`);
     lines.push(`画像数: ${selectedFiles.length}`);
     lines.push(`最終件数: ${mergedRows.length}`);
+    lines.push('出力順: 選択画像・画像内の流れを保持');
     lines.push('');
     lines.push('--- 入力画像 ---');
     for (const f of selectedFiles) {
@@ -1289,16 +1283,14 @@
   function updateTsv() {
     const complete = rowsAreComplete();
     const abnormal = hasReadingIssue();
-    const sorted = [...mergedRows]
-      .filter(r => Number.isInteger(r.itemNumber))
-      .sort((a, b) => a.itemNumber - b.itemNumber);
+    const outputRows = mergedRows.filter(r => Number.isInteger(r.itemNumber));
 
-    tsvPreview.value = sorted
+    tsvPreview.value = outputRows
       .map(r => `${r.itemNumber ?? ''}\t${r.valueA ?? ''}\t${r.valueB ?? ''}`)
       .join('\n');
 
     copyBtn.classList.remove('done');
-    copyBtn.disabled = !complete || !sorted.length || abnormal;
+    copyBtn.disabled = !complete || !outputRows.length || abnormal;
     copyBtn.textContent = '結果をコピー';
 
     diagnosticCopyBtn.classList.remove('done');
