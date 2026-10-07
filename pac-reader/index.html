@@ -277,28 +277,12 @@
       padding-top: 8px;
       background: linear-gradient(to bottom, rgba(20,24,29,0), var(--panel) 28%);
     }
-    .sheet-copy-dock { margin-top: 10px; }
     .copy-btn { box-shadow: 0 8px 24px rgba(47,143,255,.28); }
     .copy-btn.done { background: #238657; }
     .copy-btn.diagnostic {
       background: #9a6a12;
       box-shadow: 0 8px 24px rgba(154,106,18,.28);
     }
-    .copy-btn.sheet {
-      background: #6a5acd;
-      box-shadow: 0 8px 24px rgba(106,90,205,.28);
-    }
-    .source-name {
-      margin-top: 12px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #2e3741;
-      background: #101318;
-      color: #d9e1e8;
-      font-size: 13px;
-      line-height: 1.45;
-    }
-    .source-name strong { color: #f3f5f7; }
     .tsv-preview {
       width: 100%;
       min-height: 116px;
@@ -383,9 +367,6 @@
       </div>
       <textarea id="tsvPreview" class="tsv-preview" readonly spellcheck="false" aria-label="整形結果プレビュー"></textarea>
       <div class="copy-dock"><button id="copyBtn" class="copy-btn" type="button">結果をコピー</button></div>
-      <div id="sourceNameBox" class="source-name" hidden><strong>認識名:</strong> <span id="sourceNameText"></span></div>
-      <textarea id="sheetTsvPreview" class="tsv-preview" readonly spellcheck="false" aria-label="スプレッドシート用プレビュー"></textarea>
-      <div class="sheet-copy-dock"><button id="sheetCopyBtn" class="copy-btn sheet" type="button">スプレッドシート用コピー</button></div>
       <div class="diagnostic-area">
         <button id="diagnosticCopyBtn" class="copy-btn diagnostic" type="button">診断情報をコピー</button>
         <h3 class="diagnostic-title">診断情報</h3>
@@ -393,7 +374,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261007_145429.474</p>
+    <p class="footer-note">ver 20261007_145800.000</p>
   </main>
 
 <script>
@@ -415,10 +396,6 @@
   const warnBox = $('#warnBox');
   const tsvPreview = $('#tsvPreview');
   const copyBtn = $('#copyBtn');
-  const sourceNameBox = $('#sourceNameBox');
-  const sourceNameText = $('#sourceNameText');
-  const sheetTsvPreview = $('#sheetTsvPreview');
-  const sheetCopyBtn = $('#sheetCopyBtn');
   const diagnosticCopyBtn = $('#diagnosticCopyBtn');
   const debugText = $('#debugText');
 
@@ -427,13 +404,8 @@
   let warnings = [];
   let issues = [];
   let debugLines = [];
-  let sourceName = '';
-  let sourceNameRaw = '';
-  let sourceNameFile = '';
-  let sourceNameConfidence = null;
-  let sourceNameWarning = '';
   let busy = false;
-  const APP_VERSION = '20261007_145429.474';
+  const APP_VERSION = '20261007_145800.000';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -482,26 +454,15 @@
     warnings = [];
     issues = [];
     debugLines = [];
-    sourceName = '';
-    sourceNameRaw = '';
-    sourceNameFile = '';
-    sourceNameConfidence = null;
-    sourceNameWarning = '';
     fileList.innerHTML = '';
     resultBody.innerHTML = '';
     warnBox.innerHTML = '';
     tsvPreview.value = '';
-    sheetTsvPreview.value = '';
-    sourceNameBox.hidden = true;
-    sourceNameText.textContent = '';
     statusCard.hidden = true;
     resultsCard.hidden = true;
     analyzeBtn.disabled = true;
     copyBtn.classList.remove('done');
     copyBtn.textContent = '結果をコピー';
-    sheetCopyBtn.classList.remove('done');
-    sheetCopyBtn.classList.add('sheet');
-    sheetCopyBtn.textContent = 'スプレッドシート用コピー';
     diagnosticCopyBtn.classList.remove('done');
     diagnosticCopyBtn.classList.add('diagnostic');
     diagnosticCopyBtn.textContent = '診断情報をコピー';
@@ -987,106 +948,6 @@
     return cards;
   }
 
-  function makeSourceNameCanvas(frame, binary = false, factor = 2.4) {
-    const box = {
-      x0: Math.round(frame.width * 0.08),
-      y0: Math.round(frame.height * 0.12),
-      x1: Math.round(frame.width * 0.92),
-      y1: Math.round(frame.height * 0.168)
-    };
-    const w = Math.max(1, box.x1 - box.x0);
-    const h = Math.max(1, box.y1 - box.y0);
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(w * factor));
-    canvas.height = Math.max(1, Math.round(h * factor));
-    const ctx = canvas.getContext('2d', { willReadFrequently: true }) || canvas.getContext('2d');
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.imageSmoothingEnabled = true;
-    ctx.drawImage(frame.canvas, box.x0, box.y0, w, h, 0, 0, canvas.width, canvas.height);
-
-    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const d = img.data;
-    for (let i = 0; i < d.length; i += 4) {
-      const y = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
-      let v;
-      if (binary) {
-        v = y < 190 ? 0 : 255;
-      } else {
-        v = clamp((y - 92) * 1.65, 0, 255);
-      }
-      d[i] = d[i + 1] = d[i + 2] = v;
-      d[i + 3] = 255;
-    }
-    ctx.putImageData(img, 0, 0);
-    return canvas;
-  }
-
-  function cleanSourceNameLine(text) {
-    return String(text ?? '')
-      .replace(/[\s\u3000]+/g, '')
-      .replace(/^[|｜\[\]{}()（）「」『』【】]+|[|｜\[\]{}()（）「」『』【】]+$/g, '')
-      .trim();
-  }
-
-  function pickSourceName(raw) {
-    const lines = String(raw ?? '')
-      .split(/\r?\n+/)
-      .map(cleanSourceNameLine)
-      .filter(Boolean);
-    let best = '';
-    let bestScore = -Infinity;
-    for (const line of lines) {
-      const jpCount = (line.match(/[\u3040-\u30ff\u3400-\u9fff]/g) || []).length;
-      const hasStoreSuffix = line.includes('店');
-      const score = (hasStoreSuffix ? 100 : 0) + jpCount * 2 + Math.min(line.length, 40);
-      if (hasStoreSuffix && jpCount >= 4 && score > bestScore) {
-        best = line;
-        bestScore = score;
-      }
-    }
-    return best;
-  }
-
-  async function recognizeSourceName(worker, frames) {
-    sourceName = '';
-    sourceNameRaw = '';
-    sourceNameFile = '';
-    sourceNameConfidence = null;
-    sourceNameWarning = '';
-
-    await worker.setParameters({
-      tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_LINE ?? '7',
-      preserve_interword_spaces: '1',
-      user_defined_dpi: '300'
-    });
-
-    const attempts = [];
-    for (const frame of frames) {
-      for (const binary of [false, true]) {
-        const canvas = makeSourceNameCanvas(frame, binary);
-        const res = await worker.recognize(canvas);
-        const raw = String(res?.data?.text ?? '').trim();
-        const confidence = Number(res?.data?.confidence ?? 0);
-        const picked = pickSourceName(raw);
-        attempts.push({ fileName: frame.file.name, binary, raw, confidence, picked });
-        if (picked) {
-          sourceName = picked;
-          sourceNameRaw = raw;
-          sourceNameFile = frame.file.name;
-          sourceNameConfidence = confidence;
-          debugLines.push(`名称: ${picked} | ${frame.file.name} | ${binary ? 'binary' : 'gray'} | confidence=${Math.round(confidence)} | raw=${JSON.stringify(raw)}`);
-          return;
-        }
-      }
-    }
-
-    sourceNameWarning = '名称を認識できなかったため、スプレッドシート用コピーは利用できません。';
-    for (const a of attempts) {
-      debugLines.push(`名称候補なし | ${a.fileName} | ${a.binary ? 'binary' : 'gray'} | confidence=${Math.round(a.confidence)} | raw=${JSON.stringify(a.raw)}`);
-    }
-  }
-
   async function recognizeCanvas(worker, canvas) {
     if (!canvas) return { value: null, confidence: null, raw: '' };
     const res = await worker.recognize(canvas);
@@ -1359,15 +1220,12 @@
     }
 
     const uniqueWarnings = [...new Set(warnings)];
-    if (sourceNameWarning) uniqueWarnings.push(sourceNameWarning);
     for (const w of uniqueWarnings) {
       const div = document.createElement('div');
       div.className = 'warning';
       div.textContent = w;
       warnBox.append(div);
     }
-    sourceNameText.textContent = sourceName || '未認識';
-    sourceNameBox.hidden = !sourceName;
     updateTsv();
     debugText.textContent = debugLines.join('\n');
     resultsCard.hidden = false;
@@ -1402,9 +1260,6 @@
     lines.push(`状態: ${hasReadingIssue() ? '読み取り異常' : '正常'}`);
     lines.push(`画像数: ${selectedFiles.length}`);
     lines.push(`最終件数: ${mergedRows.length}`);
-    lines.push(`認識名: ${sourceName || '未認識'}`);
-    if (sourceNameFile) lines.push(`認識名画像: ${sourceNameFile}`);
-    lines.push(`スプレッドシート用: ${sourceName && rowsAreComplete() && !hasReadingIssue() ? '利用可' : '利用不可'}`);
     lines.push('');
     lines.push('--- 入力画像 ---');
     for (const f of selectedFiles) {
@@ -1439,21 +1294,12 @@
       .sort((a, b) => a.itemNumber - b.itemNumber);
 
     tsvPreview.value = sorted
-      .map(r => `${r.valueA ?? ''}\t${r.valueB ?? ''}`)
+      .map(r => `${r.itemNumber ?? ''}\t${r.valueA ?? ''}\t${r.valueB ?? ''}`)
       .join('\n');
-
-    sheetTsvPreview.value = sourceName
-      ? [sourceName, ...sorted.map(r => `${r.itemNumber ?? ''}\t${r.valueA ?? ''}\t${r.valueB ?? ''}`)].join('\n')
-      : sorted.map(r => `${r.itemNumber ?? ''}\t${r.valueA ?? ''}\t${r.valueB ?? ''}`).join('\n');
 
     copyBtn.classList.remove('done');
     copyBtn.disabled = !complete || !sorted.length || abnormal;
     copyBtn.textContent = '結果をコピー';
-
-    sheetCopyBtn.classList.remove('done');
-    sheetCopyBtn.classList.add('sheet');
-    sheetCopyBtn.disabled = !sourceName || !complete || !sorted.length || abnormal;
-    sheetCopyBtn.textContent = 'スプレッドシート用コピー';
 
     diagnosticCopyBtn.classList.remove('done');
     diagnosticCopyBtn.classList.add('diagnostic');
@@ -1491,22 +1337,6 @@
     }
   });
 
-  sheetCopyBtn.addEventListener('click', async () => {
-    try {
-      await copyText(sheetTsvPreview.value);
-      sheetCopyBtn.classList.remove('sheet');
-      sheetCopyBtn.classList.add('done');
-      sheetCopyBtn.textContent = 'コピーしました';
-      setTimeout(() => {
-        sheetCopyBtn.classList.remove('done');
-        sheetCopyBtn.classList.add('sheet');
-        updateTsv();
-      }, 1400);
-    } catch (err) {
-      alert(`コピーに失敗しました: ${err.message}`);
-    }
-  });
-
   diagnosticCopyBtn.addEventListener('click', async () => {
     try {
       await copyText(buildDiagnosticText());
@@ -1533,14 +1363,8 @@
     issues = [];
     debugLines = [];
     mergedRows = [];
-    sourceName = '';
-    sourceNameRaw = '';
-    sourceNameFile = '';
-    sourceNameConfidence = null;
-    sourceNameWarning = '';
     const started = performance.now();
     let worker = null;
-    let nameWorker = null;
 
     try {
       setStatus('画像を解析中…', '読み取り領域を検出しています', 4);
@@ -1558,29 +1382,7 @@
       debugLines.push(`検出項目合計: ${allCards.length}`);
 
       if (!window.Tesseract) throw new Error('Tesseract.jsを読み込めませんでした。通信状態を確認してください。');
-
-      try {
-        setStatus('名称OCRを準備中…', '初回は日本語認識データを取得します', 15);
-        nameWorker = await Tesseract.createWorker('jpn', Tesseract.OEM?.LSTM_ONLY ?? 1, {
-          logger: (m) => {
-            if (m?.status && typeof m.progress === 'number') {
-              statusSub.textContent = `${m.status} ${Math.round(m.progress * 100)}%`;
-            }
-          }
-        });
-        setStatus('名称を認識中…', `${frames.length}枚から確認しています`, 17);
-        await recognizeSourceName(nameWorker, frames);
-      } catch (nameErr) {
-        sourceNameWarning = '名称OCRを完了できなかったため、スプレッドシート用コピーは利用できません。';
-        debugLines.push(`名称OCR error: ${nameErr?.message || String(nameErr)}`);
-      } finally {
-        if (nameWorker) {
-          try { await nameWorker.terminate(); } catch (_) {}
-          nameWorker = null;
-        }
-      }
-
-      setStatus('OCRを準備中…', '数字認識データを準備しています', 18);
+      setStatus('OCRを準備中…', '初回は認識データの取得に少し時間がかかります', 18);
       worker = await Tesseract.createWorker('eng', Tesseract.OEM?.LSTM_ONLY ?? 1, {
         logger: (m) => {
           if (m?.status && typeof m.progress === 'number') {
@@ -1659,9 +1461,6 @@
       warnings = issues.map(i => i.message);
       renderResults();
     } finally {
-      if (nameWorker) {
-        try { await nameWorker.terminate(); } catch (_) {}
-      }
       if (worker) {
         try { await worker.terminate(); } catch (_) {}
       }
