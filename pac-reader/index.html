@@ -335,7 +335,7 @@
     <section class="card">
       <div class="privacy"><span class="dot"></span><span>選択した画像はアップロードせず、読み取り処理はSafari内で行います。初回のみOCRライブラリと認識データをCDNから読み込みます。</span></div>
       <h2 class="section-title">1. 画像を選択</h2>
-      <p class="lead" style="margin:0 0 12px">複数店舗・複数機種の画像を一度に選択できます。出力は画像内の流れを保ち、重複した同一台は統合します。</p>
+      <p class="lead" style="margin:0 0 12px">複数店舗・複数機種の画像を一度に選択できます。画像同士は少し重ねて撮影してください。出力は画像内の流れを保ち、重複した同一台は統合します。</p>
       <label class="file-pick">
         <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/*" multiple>
         <span class="pick-face">＋ 画像を選択</span>
@@ -375,7 +375,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261007_181500.000</p>
+    <p class="footer-note">ver 20261008_005500.000</p>
   </main>
 
 <script>
@@ -406,7 +406,7 @@
   let issues = [];
   let debugLines = [];
   let busy = false;
-  const APP_VERSION = '20261007_181500.000';
+  const APP_VERSION = '20261008_005500.000';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -590,7 +590,7 @@
       const a = candidates[i], b = candidates[i + 1], c = candidates[i + 2];
       const gap1 = b.x0 - a.x1 - 1;
       const gap2 = c.x0 - b.x1 - 1;
-      if (a.x0 < 80 * s && gap1 >= 4 * s && gap1 <= 30 * s && gap2 >= 3 * s && gap2 <= 30 * s) {
+      if (a.x0 < 80 * s && gap1 >= 2 * s && gap1 <= 30 * s && gap2 >= 2 * s && gap2 <= 30 * s) {
         const pad = Math.max(3, Math.round(6 * s));
         return {
           x0: Math.max(x0, x0 + a.x0 - pad),
@@ -923,24 +923,27 @@
           errors: []
         };
         if (!body) {
-          // 画面端などで本体が途中までしか写っていない候補。重複統合時に完全版があれば静かに破棄する。
-          card.errors.push('読み取り領域が画像内に完全には収まっていません');
-        } else {
-          card.valueABox = findValueABox(frame, card);
-          card.valueBBox = findValueBBox(frame, card);
-          if (!card.valueABox) card.errors.push('値Aの領域を検出できませんでした');
-          if (!card.valueBBox) card.errors.push('値Bの領域を検出できませんでした');
-          if (!card.valueABox || !card.valueBBox) card.captureState = 'partial';
+          // 画面端にタイトル帯しか写っていない候補は採用しない。
+          // 次の重なり画像に完全版がある前提で、誤OCRによる幽霊台番を防ぐ。
+          debugLines.push(`${frame.file.name}: 画面端の不完全候補を除外`);
+          return;
         }
+
+        card.valueABox = findValueABox(frame, card);
+        card.valueBBox = findValueBBox(frame, card);
+        if (!card.valueABox) card.errors.push('値Aの領域を検出できませんでした');
+        if (!card.valueBBox) card.errors.push('値Bの領域を検出できませんでした');
+        if (!card.valueABox || !card.valueBBox) card.captureState = 'partial';
         cards.push(card);
       };
 
-      if (hasL && hasR) {
-        pushCard(L, 0, half, 'half', L.y1);
-        pushCard(R, half, frame.width, 'half', R.y1);
+      if (L && R) {
+        // 左右のタイトル帯が両方見えている行は、必ず左右2枠として扱う。
+        // 片側の番号抽出だけ失敗しても、反対側を全幅カードへ昇格させない。
+        if (hasL) pushCard(L, 0, half, 'half', L.y1);
+        if (hasR) pushCard(R, half, frame.width, 'half', R.y1);
       } else if (hasL) {
-        if (R) pushCard(L, 0, frame.width, 'full', Math.max(L.y1, R.y1));
-        else pushCard(L, 0, half, 'half', L.y1);
+        pushCard(L, 0, frame.width, 'full', L.y1);
       } else if (hasR) {
         pushCard(R, half, frame.width, 'half', R.y1);
       }
