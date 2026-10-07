@@ -63,10 +63,7 @@
     .wrap {
       width: min(760px, 100%);
       margin: 0 auto;
-      padding:
-        calc(18px + env(safe-area-inset-top))
-        14px
-        40px;
+      padding: calc(18px + env(safe-area-inset-top)) 14px 40px;
     }
 
     header {
@@ -422,15 +419,17 @@
         monospace;
     }
 
-    details {
-      margin-top: 12px;
+    .diagnostic-area {
+      margin-top: 14px;
       color: var(--muted);
       font-size: 12px;
     }
 
-    details summary {
-      cursor: pointer;
-      padding: 6px 0;
+    .diagnostic-title {
+      margin: 14px 2px 6px;
+      color: #c7d0d9;
+      font-size: 13px;
+      font-weight: 700;
     }
 
     #debugText {
@@ -469,23 +468,17 @@
     }
   </style>
 </head>
-
 <body>
   <main class="wrap">
     <header>
       <h1>PAC Reader</h1>
-      <p class="lead">
-        画像内の番号と数値項目を読み取り、整形してコピーします。
-      </p>
+      <p class="lead">画像内の番号と数値項目を読み取り、整形してコピーします。</p>
     </header>
 
     <section class="card">
       <div class="privacy">
         <span class="dot"></span>
-        <span>
-          選択した画像はアップロードせず、読み取り処理はSafari内で行います。
-          初回のみOCRライブラリと認識データをCDNから読み込みます。
-        </span>
+        <span>選択した画像はアップロードせず、読み取り処理はSafari内で行います。初回のみOCRライブラリと認識データをCDNから読み込みます。</span>
       </div>
 
       <h2 class="section-title">1. 画像を選択</h2>
@@ -503,20 +496,10 @@
       <div id="fileList" class="file-list"></div>
 
       <div class="actions">
-        <button
-          id="analyzeBtn"
-          class="primary"
-          type="button"
-          disabled
-        >
+        <button id="analyzeBtn" class="primary" type="button" disabled>
           画像を読み取る
         </button>
-
-        <button
-          id="resetBtn"
-          class="secondary"
-          type="button"
-        >
+        <button id="resetBtn" class="secondary" type="button">
           リセット
         </button>
       </div>
@@ -533,33 +516,20 @@
         <span id="statusSub"></span>
       </div>
 
-      <div
-        class="progress"
-        aria-hidden="true"
-      >
+      <div class="progress" aria-hidden="true">
         <div id="progressBar"></div>
       </div>
     </section>
 
-    <section
-      id="resultsCard"
-      class="card results-card"
-      hidden
-    >
+    <section id="resultsCard" class="card results-card" hidden>
       <div class="summary">
         <div>
-          <strong id="resultCount">0件</strong>
-          <br>
-          <small>
-            認識結果を確認してください
-          </small>
+          <strong id="resultCount">0件</strong><br>
+          <small>認識結果を確認してください</small>
         </div>
       </div>
 
-      <div
-        id="warnBox"
-        class="warn-box"
-      ></div>
+      <div id="warnBox" class="warn-box"></div>
 
       <div class="table-wrap">
         <table>
@@ -583,77 +553,52 @@
       ></textarea>
 
       <div class="copy-dock">
-        <button
-          id="copyBtn"
-          class="copy-btn"
-          type="button"
-        >
+        <button id="copyBtn" class="copy-btn" type="button">
           結果をコピー
         </button>
       </div>
 
-      <details>
-        <summary>診断情報</summary>
+      <div class="diagnostic-area">
+        <button
+          id="diagnosticCopyBtn"
+          class="copy-btn diagnostic"
+          type="button"
+        >
+          診断情報をコピー
+        </button>
+
+        <h3 class="diagnostic-title">診断情報</h3>
         <pre id="debugText"></pre>
-      </details>
+      </div>
     </section>
 
-    <p class="footer-note">
-      プロトタイプ。画像レイアウトが大きく変わった場合は読み取りロジックの調整が必要です。
-    </p>
+    <p class="footer-note">ver 20261007_124412.041</p>
   </main>
 
 <script>
 (() => {
   'use strict';
 
-  const $ = (s) =>
-    document.querySelector(s);
+  const $ = (s) => document.querySelector(s);
 
-  const fileInput =
-    $('#fileInput');
+  const fileInput = $('#fileInput');
+  const fileList = $('#fileList');
+  const analyzeBtn = $('#analyzeBtn');
+  const resetBtn = $('#resetBtn');
 
-  const fileList =
-    $('#fileList');
+  const statusCard = $('#statusCard');
+  const statusText = $('#statusText');
+  const statusSub = $('#statusSub');
+  const progressBar = $('#progressBar');
 
-  const analyzeBtn =
-    $('#analyzeBtn');
-
-  const resetBtn =
-    $('#resetBtn');
-
-  const statusCard =
-    $('#statusCard');
-
-  const statusText =
-    $('#statusText');
-
-  const statusSub =
-    $('#statusSub');
-
-  const progressBar =
-    $('#progressBar');
-
-  const resultsCard =
-    $('#resultsCard');
-
-  const resultCount =
-    $('#resultCount');
-
-  const resultBody =
-    $('#resultBody');
-
-  const warnBox =
-    $('#warnBox');
-
-  const tsvPreview =
-    $('#tsvPreview');
-
-  const copyBtn =
-    $('#copyBtn');
-
-  const debugText =
-    $('#debugText');
+  const resultsCard = $('#resultsCard');
+  const resultCount = $('#resultCount');
+  const resultBody = $('#resultBody');
+  const warnBox = $('#warnBox');
+  const tsvPreview = $('#tsvPreview');
+  const copyBtn = $('#copyBtn');
+  const diagnosticCopyBtn = $('#diagnosticCopyBtn');
+  const debugText = $('#debugText');
 
   let selectedFiles = [];
   let mergedRows = [];
@@ -661,218 +606,127 @@
   let issues = [];
   let debugLines = [];
   let busy = false;
-  let copyMode = 'result';
 
-  const APP_VERSION =
-    'prototype-0.4';
+  const APP_VERSION = '20261007_124412.041';
 
   const clamp = (v, lo, hi) =>
-    Math.max(
-      lo,
-      Math.min(hi, v)
-    );
+    Math.max(lo, Math.min(hi, v));
 
   const digitsOnly = (s) =>
-    String(s ?? '')
-      .replace(/\D/g, '');
+    String(s ?? '').replace(/\D/g, '');
 
   const fmtBytes = (n) =>
     n < 1024 * 1024
-      ? `${Math.max(
-          1,
-          Math.round(n / 1024)
-        )} KB`
-      : `${(
-          n /
-          1024 /
-          1024
-        ).toFixed(1)} MB`;
+      ? `${Math.max(1, Math.round(n / 1024))} KB`
+      : `${(n / 1024 / 1024).toFixed(1)} MB`;
 
-  function setStatus(
-    main,
-    sub = '',
-    pct = null
-  ) {
+  function setStatus(main, sub = '', pct = null) {
     statusCard.hidden = false;
     statusText.textContent = main;
     statusSub.textContent = sub;
 
     if (pct == null) {
-      progressBar.style.width =
-        '8%';
+      progressBar.style.width = '8%';
     } else {
-      progressBar.style.width =
-        `${clamp(
-          pct,
-          0,
-          100
-        )}%`;
+      progressBar.style.width = `${clamp(pct, 0, 100)}%`;
     }
   }
 
   function renderFiles() {
     fileList.innerHTML = '';
 
-    for (
-      const f of selectedFiles
-    ) {
-      const row =
-        document.createElement(
-          'div'
-        );
+    for (const f of selectedFiles) {
+      const row = document.createElement('div');
+      row.className = 'file-row';
 
-      row.className =
-        'file-row';
+      const name = document.createElement('span');
+      name.className = 'file-name';
+      name.textContent = f.name;
 
-      const name =
-        document.createElement(
-          'span'
-        );
+      const size = document.createElement('span');
+      size.className = 'file-size';
+      size.textContent = fmtBytes(f.size);
 
-      name.className =
-        'file-name';
-
-      name.textContent =
-        f.name;
-
-      const size =
-        document.createElement(
-          'span'
-        );
-
-      size.className =
-        'file-size';
-
-      size.textContent =
-        fmtBytes(f.size);
-
-      row.append(
-        name,
-        size
-      );
-
+      row.append(name, size);
       fileList.append(row);
     }
 
     analyzeBtn.disabled =
-      busy ||
-      selectedFiles.length === 0;
+      busy || selectedFiles.length === 0;
   }
 
-  fileInput.addEventListener(
-    'change',
-    () => {
-      selectedFiles =
-        Array.from(
-          fileInput.files || []
-        );
+  fileInput.addEventListener('change', () => {
+    selectedFiles = Array.from(fileInput.files || []);
 
-      renderFiles();
+    renderFiles();
 
-      resultsCard.hidden = true;
-      statusCard.hidden = true;
+    resultsCard.hidden = true;
+    statusCard.hidden = true;
+  });
+
+  resetBtn.addEventListener('click', () => {
+    if (busy) {
+      return;
     }
-  );
 
-  resetBtn.addEventListener(
-    'click',
-    () => {
-      if (busy) {
-        return;
-      }
+    fileInput.value = '';
 
-      fileInput.value = '';
+    selectedFiles = [];
+    mergedRows = [];
+    warnings = [];
+    issues = [];
+    debugLines = [];
 
-      selectedFiles = [];
-      mergedRows = [];
-      warnings = [];
-      issues = [];
-      debugLines = [];
+    fileList.innerHTML = '';
+    resultBody.innerHTML = '';
+    warnBox.innerHTML = '';
+    tsvPreview.value = '';
 
-      fileList.innerHTML = '';
-      resultBody.innerHTML = '';
-      warnBox.innerHTML = '';
-      tsvPreview.value = '';
+    statusCard.hidden = true;
+    resultsCard.hidden = true;
 
-      statusCard.hidden = true;
-      resultsCard.hidden = true;
+    analyzeBtn.disabled = true;
 
-      analyzeBtn.disabled = true;
+    copyBtn.classList.remove('done');
+    copyBtn.textContent = '結果をコピー';
 
-      copyBtn.classList.remove(
-        'done',
-        'diagnostic'
-      );
+    diagnosticCopyBtn.classList.remove('done');
+    diagnosticCopyBtn.classList.add('diagnostic');
+    diagnosticCopyBtn.textContent = '診断情報をコピー';
+  });
 
-      copyMode = 'result';
-
-      copyBtn.textContent =
-        '結果をコピー';
-    }
-  );
-
-  async function loadImageFile(
-    file
-  ) {
-    const url =
-      URL.createObjectURL(file);
+  async function loadImageFile(file) {
+    const url = URL.createObjectURL(file);
 
     try {
-      const img =
-        new Image();
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
 
-      img.decoding =
-        'async';
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
 
-      img.src =
-        url;
+        img.onerror = () =>
+          reject(
+            new Error(
+              `${file.name} を画像として開けませんでした`
+            )
+          );
+      });
 
-      await new Promise(
-        (
-          resolve,
-          reject
-        ) => {
-          img.onload =
-            resolve;
+      const canvas = document.createElement('canvas');
 
-          img.onerror =
-            () =>
-              reject(
-                new Error(
-                  `${file.name} を画像として開けませんでした`
-                )
-              );
-        }
-      );
-
-      const canvas =
-        document.createElement(
-          'canvas'
-        );
-
-      canvas.width =
-        img.naturalWidth;
-
-      canvas.height =
-        img.naturalHeight;
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
 
       const ctx =
         canvas.getContext(
           '2d',
-          {
-            willReadFrequently:
-              true
-          }
+          { willReadFrequently: true }
         ) ||
-        canvas.getContext(
-          '2d'
-        );
+        canvas.getContext('2d');
 
-      ctx.drawImage(
-        img,
-        0,
-        0
-      );
+      ctx.drawImage(img, 0, 0);
 
       const imageData =
         ctx.getImageData(
@@ -887,36 +741,20 @@
         canvas,
         ctx,
         imageData,
-        width:
-          canvas.width,
-        height:
-          canvas.height,
-        scale:
-          canvas.width /
-          1206
+        width: canvas.width,
+        height: canvas.height,
+        scale: canvas.width / 1206
       };
     } finally {
-      URL.revokeObjectURL(
-        url
-      );
+      URL.revokeObjectURL(url);
     }
   }
 
-  function rgbAt(
-    frame,
-    x,
-    y
-  ) {
+  function rgbAt(frame, x, y) {
     const i =
-      (
-        y *
-        frame.width +
-        x
-      ) *
-      4;
+      (y * frame.width + x) * 4;
 
-    const d =
-      frame.imageData.data;
+    const d = frame.imageData.data;
 
     return [
       d[i],
@@ -925,21 +763,11 @@
     ];
   }
 
-  function lumaAt(
-    frame,
-    x,
-    y
-  ) {
+  function lumaAt(frame, x, y) {
     const i =
-      (
-        y *
-        frame.width +
-        x
-      ) *
-      4;
+      (y * frame.width + x) * 4;
 
-    const d =
-      frame.imageData.data;
+    const d = frame.imageData.data;
 
     return (
       d[i] * 0.299 +
@@ -948,15 +776,10 @@
     );
   }
 
-  function fillShortFalseGaps(
-    mask,
-    maxGap
-  ) {
+  function fillShortFalseGaps(mask, maxGap) {
     let i = 0;
 
-    while (
-      i < mask.length
-    ) {
+    while (i < mask.length) {
       if (mask[i]) {
         i++;
         continue;
@@ -971,43 +794,29 @@
         i++;
       }
 
-      const len =
-        i - start;
+      const len = i - start;
 
       if (
         start > 0 &&
         i < mask.length &&
         len <= maxGap
       ) {
-        for (
-          let j = start;
-          j < i;
-          j++
-        ) {
-          mask[j] =
-            true;
+        for (let j = start; j < i; j++) {
+          mask[j] = true;
         }
       }
     }
   }
 
-  function findGraySegments(
-    frame,
-    x0,
-    x1
-  ) {
+  function findGraySegments(frame, x0, x1) {
     const stepX =
       Math.max(
         2,
-        Math.round(
-          4 * frame.scale
-        )
+        Math.round(4 * frame.scale)
       );
 
     const rowMask =
-      new Uint8Array(
-        frame.height
-      );
+      new Uint8Array(frame.height);
 
     for (
       let y = 0;
@@ -1022,38 +831,17 @@
         x < x1;
         x += stepX
       ) {
-        const [
-          r,
-          g,
-          b
-        ] =
-          rgbAt(
-            frame,
-            x,
-            y
-          );
+        const [r, g, b] =
+          rgbAt(frame, x, y);
 
         const max =
-          Math.max(
-            r,
-            g,
-            b
-          );
+          Math.max(r, g, b);
 
         const min =
-          Math.min(
-            r,
-            g,
-            b
-          );
+          Math.min(r, g, b);
 
         const avg =
-          (
-            r +
-            g +
-            b
-          ) /
-          3;
+          (r + g + b) / 3;
 
         if (
           max - min <= 8 &&
@@ -1075,18 +863,13 @@
     }
 
     const boolMask =
-      Array.from(
-        rowMask,
-        Boolean
-      );
+      Array.from(rowMask, Boolean);
 
     fillShortFalseGaps(
       boolMask,
       Math.max(
         1,
-        Math.round(
-          2 * frame.scale
-        )
+        Math.round(2 * frame.scale)
       )
     );
 
@@ -1094,23 +877,21 @@
       Math.max(
         28,
         Math.round(
-          (x1 - x0) *
-          0.06
+          (x1 - x0) * 0.06
         )
       );
 
     const segments = [];
+
     let start = null;
 
     for (
       let y = 0;
-      y <=
-        boolMask.length;
+      y <= boolMask.length;
       y++
     ) {
       const on =
-        y <
-          boolMask.length
+        y < boolMask.length
           ? boolMask[y]
           : false;
 
@@ -1126,8 +907,7 @@
         start != null
       ) {
         if (
-          y - start >=
-          minLen
+          y - start >= minLen
         ) {
           segments.push({
             x0,
@@ -1144,10 +924,7 @@
     return segments;
   }
 
-  function findTitleDigitBox(
-    frame,
-    seg
-  ) {
+  function findTitleDigitBox(frame, seg) {
     const {
       x0,
       x1,
@@ -1155,11 +932,8 @@
       y1
     } = seg;
 
-    const w =
-      x1 - x0;
-
-    const h =
-      y1 - y0 + 1;
+    const w = x1 - x0;
+    const h = y1 - y0 + 1;
 
     const colCount =
       new Uint16Array(w);
@@ -1167,9 +941,7 @@
     const minWhiteCount =
       Math.max(
         3,
-        Math.round(
-          5 * frame.scale
-        )
+        Math.round(5 * frame.scale)
       );
 
     for (
@@ -1179,8 +951,7 @@
     ) {
       let count = 0;
 
-      const x =
-        x0 + lx;
+      const x = x0 + lx;
 
       for (
         let y = y0;
@@ -1188,21 +959,17 @@
         y++
       ) {
         if (
-          lumaAt(
-            frame,
-            x,
-            y
-          ) > 190
+          lumaAt(frame, x, y) > 190
         ) {
           count++;
         }
       }
 
-      colCount[lx] =
-        count;
+      colCount[lx] = count;
     }
 
     const runs = [];
+
     let start = null;
 
     for (
@@ -1212,8 +979,7 @@
     ) {
       const on =
         x < w
-          ? colCount[x] >
-            minWhiteCount
+          ? colCount[x] > minWhiteCount
           : false;
 
       if (
@@ -1247,8 +1013,7 @@
           runs.push({
             x0: start,
             x1: x - 1,
-            width:
-              x - start,
+            width: x - start,
             peak
           });
         }
@@ -1257,100 +1022,66 @@
       }
     }
 
-    const s =
-      frame.scale;
+    const s = frame.scale;
 
     const candidates =
       runs.filter(
         r =>
-          r.x0 >=
-            12 * s &&
-          r.width >=
-            8 * s &&
-          r.width <=
-            40 * s &&
-          r.peak >=
-            20 * s &&
-          r.x0 <
-            170 * s
+          r.x0 >= 12 * s &&
+          r.width >= 8 * s &&
+          r.width <= 40 * s &&
+          r.peak >= 20 * s &&
+          r.x0 < 170 * s
       );
 
     for (
       let i = 0;
-      i + 2 <
-        candidates.length;
+      i + 2 < candidates.length;
       i++
     ) {
-      const a =
-        candidates[i];
-
-      const b =
-        candidates[i + 1];
-
-      const c =
-        candidates[i + 2];
+      const a = candidates[i];
+      const b = candidates[i + 1];
+      const c = candidates[i + 2];
 
       const gap1 =
-        b.x0 -
-        a.x1 -
-        1;
+        b.x0 - a.x1 - 1;
 
       const gap2 =
-        c.x0 -
-        b.x1 -
-        1;
+        c.x0 - b.x1 - 1;
 
       if (
-        a.x0 <
-          80 * s &&
-        gap1 >=
-          4 * s &&
-        gap1 <=
-          30 * s &&
-        gap2 >=
-          3 * s &&
-        gap2 <=
-          30 * s
+        a.x0 < 80 * s &&
+        gap1 >= 4 * s &&
+        gap1 <= 30 * s &&
+        gap2 >= 3 * s &&
+        gap2 <= 30 * s
       ) {
         const pad =
           Math.max(
             3,
-            Math.round(
-              6 * s
-            )
+            Math.round(6 * s)
           );
 
         return {
-          x0:
-            Math.max(
-              x0,
-              x0 +
-              a.x0 -
-              pad
-            ),
+          x0: Math.max(
+            x0,
+            x0 + a.x0 - pad
+          ),
           y0:
             y0 +
             Math.max(
               1,
-              Math.round(
-                2 * s
-              )
+              Math.round(2 * s)
             ),
-          x1:
-            Math.min(
-              x1,
-              x0 +
-              c.x1 +
-              pad +
-              1
-            ),
+          x1: Math.min(
+            x1,
+            x0 + c.x1 + pad + 1
+          ),
           y1:
             y1 -
             Math.max(
               1,
-              Math.round(
-                2 * s
-              )
+              Math.round(2 * s)
             ) +
             1
         };
@@ -1360,11 +1091,7 @@
     return null;
   }
 
-  function clusterRows(
-    left,
-    right,
-    tol
-  ) {
+  function clusterRows(left, right, tol) {
     const all = [
       ...left.map(
         s => ({
@@ -1385,38 +1112,28 @@
 
     const groups = [];
 
-    for (
-      const item of all
-    ) {
+    for (const item of all) {
       const last =
         groups[
-          groups.length -
-          1
+          groups.length - 1
         ];
 
       if (
         !last ||
         Math.abs(
-          item.y0 -
-          last.meanY
+          item.y0 - last.meanY
         ) > tol
       ) {
         groups.push({
           items: [item],
-          meanY:
-            item.y0
+          meanY: item.y0
         });
       } else {
-        last.items.push(
-          item
-        );
+        last.items.push(item);
 
         last.meanY =
           last.items.reduce(
-            (
-              sum,
-              v
-            ) =>
+            (sum, v) =>
               sum + v.y0,
             0
           ) /
@@ -1428,16 +1145,13 @@
       g => ({
         L:
           g.items.find(
-            v =>
-              v.side === 'L'
+            v => v.side === 'L'
           ) || null,
         R:
           g.items.find(
-            v =>
-              v.side === 'R'
+            v => v.side === 'R'
           ) || null,
-        y:
-          g.meanY
+        y: g.meanY
       })
     );
   }
@@ -1451,9 +1165,7 @@
     const step =
       Math.max(
         2,
-        Math.round(
-          3 * frame.scale
-        )
+        Math.round(3 * frame.scale)
       );
 
     let dark = 0;
@@ -1465,11 +1177,7 @@
       x += step
     ) {
       if (
-        lumaAt(
-          frame,
-          x,
-          y
-        ) < 80
+        lumaAt(frame, x, y) < 80
       ) {
         dark++;
       }
@@ -1493,17 +1201,16 @@
         frame.height - 1,
         titleEnd +
           Math.round(
-            (x1 - x0) *
-            0.5
+            (x1 - x0) * 0.5
           )
       );
 
     const groups = [];
+
     let start = null;
 
     for (
-      let y =
-        titleEnd + 1;
+      let y = titleEnd + 1;
       y <= maxY + 1;
       y++
     ) {
@@ -1544,10 +1251,8 @@
     }
 
     return {
-      top:
-        groups[0].y0,
-      bottom:
-        groups[1].y1
+      top: groups[0].y0,
+      bottom: groups[1].y1
     };
   }
 
@@ -1558,59 +1263,43 @@
   ) {
     const x0 =
       clamp(
-        Math.floor(
-          region.x0
-        ),
+        Math.floor(region.x0),
         0,
         frame.width - 1
       );
 
     const y0 =
       clamp(
-        Math.floor(
-          region.y0
-        ),
+        Math.floor(region.y0),
         0,
         frame.height - 1
       );
 
     const x1 =
       clamp(
-        Math.ceil(
-          region.x1
-        ),
+        Math.ceil(region.x1),
         x0 + 1,
         frame.width
       );
 
     const y1 =
       clamp(
-        Math.ceil(
-          region.y1
-        ),
+        Math.ceil(region.y1),
         y0 + 1,
         frame.height
       );
 
-    const w =
-      x1 - x0;
-
-    const h =
-      y1 - y0;
+    const w = x1 - x0;
+    const h = y1 - y0;
 
     const visited =
-      new Uint8Array(
-        w * h
-      );
+      new Uint8Array(w * h);
 
     const comps = [];
     const stack = [];
 
     const isDark =
-      (
-        lx,
-        ly
-      ) =>
+      (lx, ly) =>
         lumaAt(
           frame,
           x0 + lx,
@@ -1639,10 +1328,7 @@
         visited[seed] = 1;
 
         if (
-          !isDark(
-            sx,
-            sy
-          )
+          !isDark(sx, sy)
         ) {
           continue;
         }
@@ -1668,32 +1354,23 @@
             );
 
           const cx =
-            idx -
-            cy * w;
+            idx - cy * w;
 
           area++;
 
-          if (
-            cx < minX
-          ) {
+          if (cx < minX) {
             minX = cx;
           }
 
-          if (
-            cx > maxX
-          ) {
+          if (cx > maxX) {
             maxX = cx;
           }
 
-          if (
-            cy < minY
-          ) {
+          if (cy < minY) {
             minY = cy;
           }
 
-          if (
-            cy > maxY
-          ) {
+          if (cy > maxY) {
             maxY = cy;
           }
 
@@ -1730,8 +1407,7 @@
               }
 
               const ni =
-                ny * w +
-                nx;
+                ny * w + nx;
 
               if (
                 visited[ni]
@@ -1742,14 +1418,9 @@
               visited[ni] = 1;
 
               if (
-                isDark(
-                  nx,
-                  ny
-                )
+                isDark(nx, ny)
               ) {
-                stack.push(
-                  ni
-                );
+                stack.push(ni);
               }
             }
           }
@@ -1758,14 +1429,8 @@
         comps.push({
           x: minX,
           y: minY,
-          w:
-            maxX -
-            minX +
-            1,
-          h:
-            maxY -
-            minY +
-            1,
+          w: maxX - minX + 1,
+          h: maxY - minY + 1,
           area
         });
       }
@@ -1787,59 +1452,43 @@
   ) {
     const x0 =
       clamp(
-        Math.floor(
-          region.x0
-        ),
+        Math.floor(region.x0),
         0,
         frame.width - 1
       );
 
     const y0 =
       clamp(
-        Math.floor(
-          region.y0
-        ),
+        Math.floor(region.y0),
         0,
         frame.height - 1
       );
 
     const x1 =
       clamp(
-        Math.ceil(
-          region.x1
-        ),
+        Math.ceil(region.x1),
         x0 + 1,
         frame.width
       );
 
     const y1 =
       clamp(
-        Math.ceil(
-          region.y1
-        ),
+        Math.ceil(region.y1),
         y0 + 1,
         frame.height
       );
 
-    const w =
-      x1 - x0;
-
-    const h =
-      y1 - y0;
+    const w = x1 - x0;
+    const h = y1 - y0;
 
     const visited =
-      new Uint8Array(
-        w * h
-      );
+      new Uint8Array(w * h);
 
     const comps = [];
     const stack = [];
 
     const isLight =
-      (
-        lx,
-        ly
-      ) =>
+      (lx, ly) =>
         lumaAt(
           frame,
           x0 + lx,
@@ -1865,14 +1514,10 @@
           continue;
         }
 
-        visited[seed] =
-          1;
+        visited[seed] = 1;
 
         if (
-          !isLight(
-            sx,
-            sy
-          )
+          !isLight(sx, sy)
         ) {
           continue;
         }
@@ -1898,32 +1543,23 @@
             );
 
           const cx =
-            idx -
-            cy * w;
+            idx - cy * w;
 
           area++;
 
-          if (
-            cx < minX
-          ) {
+          if (cx < minX) {
             minX = cx;
           }
 
-          if (
-            cx > maxX
-          ) {
+          if (cx > maxX) {
             maxX = cx;
           }
 
-          if (
-            cy < minY
-          ) {
+          if (cy < minY) {
             minY = cy;
           }
 
-          if (
-            cy > maxY
-          ) {
+          if (cy > maxY) {
             maxY = cy;
           }
 
@@ -1960,8 +1596,7 @@
               }
 
               const ni =
-                ny * w +
-                nx;
+                ny * w + nx;
 
               if (
                 visited[ni]
@@ -1969,18 +1604,12 @@
                 continue;
               }
 
-              visited[ni] =
-                1;
+              visited[ni] = 1;
 
               if (
-                isLight(
-                  nx,
-                  ny
-                )
+                isLight(nx, ny)
               ) {
-                stack.push(
-                  ni
-                );
+                stack.push(ni);
               }
             }
           }
@@ -1989,14 +1618,8 @@
         comps.push({
           x: minX,
           y: minY,
-          w:
-            maxX -
-            minX +
-            1,
-          h:
-            maxY -
-            minY +
-            1,
+          w: maxX - minX + 1,
+          h: maxY - minY + 1,
           area
         });
       }
@@ -2112,21 +1735,12 @@
       return null;
     }
 
-    let minX =
-      Infinity;
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
 
-    let minY =
-      Infinity;
-
-    let maxX =
-      -Infinity;
-
-    let maxY =
-      -Infinity;
-
-    for (
-      const c of keep
-    ) {
+    for (const c of keep) {
       minX =
         Math.min(
           minX,
@@ -2142,59 +1756,49 @@
       maxX =
         Math.max(
           maxX,
-          c.x +
-          c.w -
-          1
+          c.x + c.w - 1
         );
 
       maxY =
         Math.max(
           maxY,
-          c.y +
-          c.h -
-          1
+          c.y + c.h - 1
         );
     }
 
     const p =
       Math.max(
         3,
-        Math.round(
-          padPx
-        )
+        Math.round(padPx)
       );
 
     return {
-      x0:
-        Math.max(
-          found.x0,
-          found.x0 +
+      x0: Math.max(
+        found.x0,
+        found.x0 +
           minX -
           p
-        ),
-      y0:
-        Math.max(
-          found.y0,
-          found.y0 +
+      ),
+      y0: Math.max(
+        found.y0,
+        found.y0 +
           minY -
           p
-        ),
-      x1:
-        Math.min(
-          found.x1,
-          found.x0 +
+      ),
+      x1: Math.min(
+        found.x1,
+        found.x0 +
           maxX +
           p +
           1
-        ),
-      y1:
-        Math.min(
-          found.y1,
-          found.y0 +
+      ),
+      y1: Math.min(
+        found.y1,
+        found.y0 +
           maxY +
           p +
           1
-        )
+      )
     };
   }
 
@@ -2203,8 +1807,7 @@
     card
   ) {
     const W =
-      card.x1 -
-      card.x0;
+      card.x1 - card.x0;
 
     const H =
       card.bottom -
@@ -2258,8 +1861,7 @@
     card
   ) {
     const W =
-      card.x1 -
-      card.x0;
+      card.x1 - card.x0;
 
     const H =
       card.bottom -
@@ -2279,8 +1881,7 @@
         3 * cellW -
         cellW * 0.08,
       y0:
-        card.top +
-        2,
+        card.top + 2,
       y1:
         card.top +
         H * 0.60
@@ -2291,8 +1892,7 @@
     let aMin;
 
     if (
-      card.kind ===
-      'full'
+      card.kind === 'full'
     ) {
       yMin =
         H * 0.12;
@@ -2342,35 +1942,25 @@
     const sx =
       Math.max(
         0,
-        Math.floor(
-          box.x0
-        )
+        Math.floor(box.x0)
       );
 
     const sy =
       Math.max(
         0,
-        Math.floor(
-          box.y0
-        )
+        Math.floor(box.y0)
       );
 
     const sw =
       Math.max(
         1,
-        Math.ceil(
-          box.x1
-        ) -
-        sx
+        Math.ceil(box.x1) - sx
       );
 
     const sh =
       Math.max(
         1,
-        Math.ceil(
-          box.y1
-        ) -
-        sy
+        Math.ceil(box.y1) - sy
       );
 
     const out =
@@ -2385,9 +1975,7 @@
       sh * factor;
 
     const ctx =
-      out.getContext(
-        '2d'
-      );
+      out.getContext('2d');
 
     ctx.imageSmoothingEnabled =
       true;
@@ -2422,36 +2010,28 @@
 
     const sx =
       clamp(
-        Math.floor(
-          box.x0
-        ),
+        Math.floor(box.x0),
         0,
         frame.width - 1
       );
 
     const sy =
       clamp(
-        Math.floor(
-          box.y0
-        ),
+        Math.floor(box.y0),
         0,
         frame.height - 1
       );
 
     const ex =
       clamp(
-        Math.ceil(
-          box.x1
-        ),
+        Math.ceil(box.x1),
         sx + 1,
         frame.width
       );
 
     const ey =
       clamp(
-        Math.ceil(
-          box.y1
-        ),
+        Math.ceil(box.y1),
         sy + 1,
         frame.height
       );
@@ -2467,16 +2047,11 @@
         'canvas'
       );
 
-    small.width =
-      sw;
-
-    small.height =
-      sh;
+    small.width = sw;
+    small.height = sh;
 
     const sctx =
-      small.getContext(
-        '2d'
-      );
+      small.getContext('2d');
 
     const binary =
       sctx.createImageData(
@@ -2504,23 +2079,12 @@
             : 255;
 
         const i =
-          (
-            y * sw +
-            x
-          ) *
-          4;
+          (y * sw + x) * 4;
 
-        binary.data[i] =
-          v;
-
-        binary.data[i + 1] =
-          v;
-
-        binary.data[i + 2] =
-          v;
-
-        binary.data[i + 3] =
-          255;
+        binary.data[i] = v;
+        binary.data[i + 1] = v;
+        binary.data[i + 2] = v;
+        binary.data[i + 3] = 255;
       }
     }
 
@@ -2552,12 +2116,9 @@
       border * 2;
 
     const ctx =
-      out.getContext(
-        '2d'
-      );
+      out.getContext('2d');
 
-    ctx.fillStyle =
-      '#fff';
+    ctx.fillStyle = '#fff';
 
     ctx.fillRect(
       0,
@@ -2601,27 +2162,17 @@
     ) {
       return {
         canvas: null,
-        digitBoxes:
-          digits,
+        digitBoxes: digits,
         sourceBox: null
       };
     }
 
-    let x0 =
-      Infinity;
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
 
-    let y0 =
-      Infinity;
-
-    let x1 =
-      -Infinity;
-
-    let y1 =
-      -Infinity;
-
-    for (
-      const d of digits
-    ) {
+    for (const d of digits) {
       x0 =
         Math.min(
           x0,
@@ -2688,9 +2239,7 @@
       y1:
         Math.min(
           titleBox.y1,
-          Math.ceil(
-            y1
-          )
+          Math.ceil(y1)
         )
     };
 
@@ -2702,8 +2251,7 @@
           threshold,
           factor
         ),
-      digitBoxes:
-        digits,
+      digitBoxes: digits,
       sourceBox
     };
   }
@@ -2756,14 +2304,9 @@
 
     const cards = [];
 
-    for (
-      const row of rows
-    ) {
-      const L =
-        row.L;
-
-      const R =
-        row.R;
+    for (const row of rows) {
+      const L = row.L;
+      const R = row.R;
 
       const hasL =
         Boolean(
@@ -2927,7 +2470,9 @@
           'half',
           R.y1
         );
-      } else if (hasL) {
+      } else if (
+        hasL
+      ) {
         if (R) {
           pushCard(
             L,
@@ -2948,7 +2493,9 @@
             L.y1
           );
         }
-      } else if (hasR) {
+      } else if (
+        hasR
+      ) {
         pushCard(
           R,
           half,
@@ -3171,9 +2718,7 @@
       'unresolved';
   }
 
-  function inferMissingItemNumbers(
-    cards
-  ) {
+  function inferMissingItemNumbers(cards) {
     const byFile =
       new Map();
 
@@ -3292,9 +2837,7 @@
     }
   }
 
-  function isUsableComplete(
-    card
-  ) {
+  function isUsableComplete(card) {
     return (
       card.captureState ===
         'complete' &&
@@ -3310,9 +2853,7 @@
     );
   }
 
-  function candidateScore(
-    card
-  ) {
+  function candidateScore(card) {
     let score = 0;
 
     if (
@@ -3377,9 +2918,7 @@
     });
   }
 
-  function mergeEntries(
-    cards
-  ) {
+  function mergeEntries(cards) {
     warnings = [];
     issues = [];
 
@@ -3733,9 +3272,7 @@
       }
     }
 
-    for (
-      const c of cards
-    ) {
+    for (const c of cards) {
       if (
         c.itemInferred &&
         Number.isInteger(
@@ -3758,20 +3295,14 @@
   }
 
   function renderResults() {
-    resultBody.innerHTML =
-      '';
-
-    warnBox.innerHTML =
-      '';
+    resultBody.innerHTML = '';
+    warnBox.innerHTML = '';
 
     resultCount.textContent =
       `${mergedRows.length}件`;
 
     for (
-      const [
-        i,
-        row
-      ] of
+      const [i, row] of
         mergedRows.entries()
     ) {
       const tr =
@@ -3792,10 +3323,7 @@
       ];
 
       values.forEach(
-        (
-          v,
-          col
-        ) => {
+        (v, col) => {
           const td =
             document.createElement(
               'td'
@@ -3819,15 +3347,7 @@
             '1';
 
           input.className =
-            `num-input${
-              col === 0
-                ? ' item-id'
-                : ''
-            }${
-              v == null
-                ? ' invalid'
-                : ''
-            }`;
+            `num-input${col === 0 ? ' item-id' : ''}${v == null ? ' invalid' : ''}`;
 
           input.value =
             v == null
@@ -3859,9 +3379,7 @@
         }
       );
 
-      resultBody.append(
-        tr
-      );
+      resultBody.append(tr);
     }
 
     const uniqueWarnings =
@@ -3886,25 +3404,19 @@
       div.textContent =
         w;
 
-      warnBox.append(
-        div
-      );
+      warnBox.append(div);
     }
 
     updateTsv();
 
     debugText.textContent =
-      debugLines.join(
-        '\n'
-      );
+      debugLines.join('\n');
 
     resultsCard.hidden =
       false;
   }
 
-  function onResultEdit(
-    e
-  ) {
+  function onResultEdit(e) {
     const input =
       e.currentTarget;
 
@@ -4048,16 +3560,7 @@
         mergedRows
     ) {
       lines.push(
-        `${
-          row.itemNumber ??
-          '?'
-        }\t${
-          row.valueA ??
-          '?'
-        }\t${
-          row.valueB ??
-          '?'
-        }`
+        `${row.itemNumber ?? '?'}\t${row.valueA ?? '?'}\t${row.valueB ?? '?'}`
       );
     }
 
@@ -4103,50 +3606,38 @@
       sorted
         .map(
           r =>
-            `${
-              r.valueA ??
-              ''
-            }\t${
-              r.valueB ??
-              ''
-            }`
+            `${r.valueA ?? ''}\t${r.valueB ?? ''}`
         )
         .join('\n');
 
     copyBtn.classList.remove(
-      'done',
+      'done'
+    );
+
+    copyBtn.disabled =
+      !complete ||
+      !sorted.length ||
+      abnormal;
+
+    copyBtn.textContent =
+      '結果をコピー';
+
+    diagnosticCopyBtn.classList.remove(
+      'done'
+    );
+
+    diagnosticCopyBtn.classList.add(
       'diagnostic'
     );
 
-    if (abnormal) {
-      copyMode =
-        'diagnostic';
+    diagnosticCopyBtn.disabled =
+      false;
 
-      copyBtn.disabled =
-        false;
-
-      copyBtn.classList.add(
-        'diagnostic'
-      );
-
-      copyBtn.textContent =
-        '診断情報をコピー';
-    } else {
-      copyMode =
-        'result';
-
-      copyBtn.disabled =
-        !complete ||
-        !sorted.length;
-
-      copyBtn.textContent =
-        '結果をコピー';
-    }
+    diagnosticCopyBtn.textContent =
+      '診断情報をコピー';
   }
 
-  async function copyText(
-    text
-  ) {
+  async function copyText(text) {
     if (
       navigator.clipboard
         ?.writeText
@@ -4163,8 +3654,7 @@
         'textarea'
       );
 
-    ta.value =
-      text;
+    ta.value = text;
 
     ta.style.position =
       'fixed';
@@ -4196,33 +3686,16 @@
     'click',
     async () => {
       try {
-        const diagnostic =
-          copyMode ===
-          'diagnostic';
-
-        const text =
-          diagnostic
-            ? buildDiagnosticText()
-            : tsvPreview.value;
-
         await copyText(
-          text
+          tsvPreview.value
         );
-
-        if (diagnostic) {
-          copyBtn.classList.remove(
-            'diagnostic'
-          );
-        }
 
         copyBtn.classList.add(
           'done'
         );
 
         copyBtn.textContent =
-          diagnostic
-            ? '診断情報をコピーしました'
-            : 'コピーしました';
+          'コピーしました';
 
         setTimeout(
           () => {
@@ -4230,24 +3703,49 @@
               'done'
             );
 
-            if (
-              copyMode ===
+            updateTsv();
+          },
+          1400
+        );
+      } catch (err) {
+        alert(
+          `コピーに失敗しました: ${err.message}`
+        );
+      }
+    }
+  );
+
+  diagnosticCopyBtn.addEventListener(
+    'click',
+    async () => {
+      try {
+        await copyText(
+          buildDiagnosticText()
+        );
+
+        diagnosticCopyBtn.classList.remove(
+          'diagnostic'
+        );
+
+        diagnosticCopyBtn.classList.add(
+          'done'
+        );
+
+        diagnosticCopyBtn.textContent =
+          '診断情報をコピーしました';
+
+        setTimeout(
+          () => {
+            diagnosticCopyBtn.classList.remove(
+              'done'
+            );
+
+            diagnosticCopyBtn.classList.add(
               'diagnostic'
-            ) {
-              copyBtn.classList.add(
-                'diagnostic'
-              );
+            );
 
-              copyBtn.textContent =
-                '診断情報をコピー';
-            } else {
-              copyBtn.classList.remove(
-                'diagnostic'
-              );
-
-              copyBtn.textContent =
-                '結果をコピー';
-            }
+            diagnosticCopyBtn.textContent =
+              '診断情報をコピー';
           },
           1400
         );
@@ -4298,8 +3796,7 @@
 
         for (
           let i = 0;
-          i <
-            selectedFiles.length;
+          i < selectedFiles.length;
           i++
         ) {
           const frame =
@@ -4307,18 +3804,14 @@
               selectedFiles[i]
             );
 
-          frames.push(
-            frame
-          );
+          frames.push(frame);
 
           setStatus(
             '画像を解析中…',
             `${i + 1} / ${selectedFiles.length}枚`,
             4 +
               12 *
-              (
-                i + 1
-              ) /
+              (i + 1) /
               selectedFiles.length
           );
 
@@ -4330,10 +3823,7 @@
         const allCards = [];
 
         frames.forEach(
-          (
-            frame,
-            i
-          ) =>
+          (frame, i) =>
             allCards.push(
               ...prepareFrame(
                 frame,
@@ -4375,18 +3865,16 @@
               ?.LSTM_ONLY ??
               1,
             {
-              logger:
-                (m) => {
-                  if (
-                    m?.status &&
-                    typeof
-                      m.progress ===
-                      'number'
-                  ) {
-                    statusSub.textContent =
-                      `${m.status} ${Math.round(m.progress * 100)}%`;
-                  }
+              logger: (m) => {
+                if (
+                  m?.status &&
+                  typeof m.progress ===
+                    'number'
+                ) {
+                  statusSub.textContent =
+                    `${m.status} ${Math.round(m.progress * 100)}%`;
                 }
+              }
             }
           );
 
@@ -4404,8 +3892,7 @@
         let done = 0;
 
         const totalJobs =
-          allCards.length *
-          3;
+          allCards.length * 3;
 
         const progress =
           (phase) => {
@@ -4553,26 +4040,11 @@
           const itemDetail =
             c.itemInferred
               ? 'sequence'
-              : `${
-                  c.itemMethod ??
-                  'unknown'
-                }${
-                  c.itemConfidence ==
-                  null
-                    ? ''
-                    : ` (${Math.round(c.itemConfidence)})`
-                }`;
+              : `${c.itemMethod ?? 'unknown'}${c.itemConfidence == null ? '' : ` (${Math.round(c.itemConfidence)})`}`;
 
           const attempts =
             c.itemAttempts.length
-              ? ` | attempts=${
-                  c.itemAttempts
-                    .map(
-                      a =>
-                        `${a.method}:${JSON.stringify(a.raw)}`
-                    )
-                    .join(',')
-                }`
+              ? ` | attempts=${c.itemAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
               : '';
 
           const errorDetail =
@@ -4594,10 +4066,8 @@
         renderResults();
 
         resultsCard.scrollIntoView({
-          behavior:
-            'smooth',
-          block:
-            'start'
+          behavior: 'smooth',
+          block: 'start'
         });
       } catch (err) {
         console.error(err);
