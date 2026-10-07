@@ -26,63 +26,36 @@
       --shadow: 0 12px 34px rgba(0,0,0,.28);
       --radius: 16px;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      background: var(--bg);
-    }
-
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
     body {
       margin: 0;
       min-height: 100dvh;
       background: var(--bg);
       color: var(--text);
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Hiragino Sans",
-        "Yu Gothic UI",
-        "Yu Gothic",
-        sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
       -webkit-font-smoothing: antialiased;
       padding: 0 0 calc(24px + env(safe-area-inset-bottom));
     }
-
-    button,
-    input {
-      font: inherit;
-    }
-
-    button {
-      -webkit-tap-highlight-color: transparent;
-    }
-
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
     .wrap {
       width: min(760px, 100%);
       margin: 0 auto;
       padding: calc(18px + env(safe-area-inset-top)) 14px 40px;
     }
-
-    header {
-      margin: 4px 2px 20px;
-    }
-
+    header { margin: 4px 2px 20px; }
     h1 {
       margin: 0;
       font-size: clamp(24px, 7vw, 34px);
       letter-spacing: -.03em;
     }
-
     .lead {
       margin: 8px 0 0;
       color: var(--muted);
       font-size: 14px;
       line-height: 1.55;
     }
-
     .card {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -91,14 +64,12 @@
       box-shadow: var(--shadow);
       margin-bottom: 14px;
     }
-
     .section-title {
       margin: 0 0 12px;
       font-size: 15px;
       font-weight: 700;
       color: #dce3ea;
     }
-
     .privacy {
       display: flex;
       align-items: flex-start;
@@ -112,7 +83,6 @@
       font-size: 13px;
       line-height: 1.45;
     }
-
     .privacy .dot {
       flex: 0 0 auto;
       width: 9px;
@@ -121,13 +91,11 @@
       background: var(--ok);
       margin-top: 5px;
     }
-
     .file-pick {
       display: block;
       position: relative;
       width: 100%;
     }
-
     .file-pick input {
       position: absolute;
       inset: 0;
@@ -136,11 +104,7 @@
       opacity: 0;
       cursor: pointer;
     }
-
-    .pick-face,
-    .primary,
-    .secondary,
-    .copy-btn {
+    .pick-face, .primary, .secondary, .copy-btn {
       min-height: 52px;
       border-radius: 13px;
       border: 1px solid transparent;
@@ -151,23 +115,17 @@
       font-weight: 750;
       user-select: none;
     }
-
     .pick-face {
       background: var(--panel2);
       border-color: #394451;
       color: var(--text);
     }
-
-    .file-pick:active .pick-face {
-      transform: translateY(1px);
-    }
-
+    .file-pick:active .pick-face { transform: translateY(1px); }
     .file-list {
       display: grid;
       gap: 8px;
       margin-top: 12px;
     }
-
     .file-row {
       display: grid;
       grid-template-columns: 1fr auto;
@@ -180,56 +138,37 @@
       border: 1px solid #232a32;
       font-size: 13px;
     }
-
     .file-name {
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
     }
-
-    .file-size {
-      color: var(--muted);
-      white-space: nowrap;
-    }
-
+    .file-size { color: var(--muted); white-space: nowrap; }
     .actions {
       display: grid;
       grid-template-columns: 1fr;
       gap: 10px;
       margin-top: 14px;
     }
-
-    .primary,
-    .secondary,
-    .copy-btn {
+    .primary, .secondary, .copy-btn {
       width: 100%;
       cursor: pointer;
     }
-
-    .primary,
-    .copy-btn {
+    .primary, .copy-btn {
       border: 0;
       background: var(--accent-strong);
       color: #fff;
     }
-
-    .primary:disabled,
-    .copy-btn:disabled {
+    .primary:disabled, .copy-btn:disabled {
       opacity: .42;
       cursor: default;
     }
-
     .secondary {
       background: transparent;
       border-color: #36414d;
       color: #c9d1d9;
     }
-
-    .status-card[hidden],
-    .results-card[hidden] {
-      display: none;
-    }
-
+    .status-card[hidden], .results-card[hidden] { display: none; }
     .status-head {
       display: flex;
       align-items: baseline;
@@ -237,23 +176,14 @@
       gap: 12px;
       margin-bottom: 10px;
     }
-
-    #statusText {
-      font-weight: 700;
-    }
-
-    #statusSub {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
+    #statusText { font-weight: 700; }
+    #statusSub { color: var(--muted); font-size: 12px; }
     .progress {
       height: 9px;
       border-radius: 999px;
       background: #262d35;
       overflow: hidden;
     }
-
     .progress > div {
       width: 0%;
       height: 100%;
@@ -261,7 +191,6 @@
       background: var(--accent);
       transition: width .18s ease;
     }
-
     .summary {
       display: flex;
       align-items: center;
@@ -269,62 +198,46 @@
       gap: 12px;
       margin-bottom: 12px;
     }
-
-    .summary strong {
-      font-size: 20px;
-    }
-
-    .summary small {
-      color: var(--muted);
-    }
-
+    .summary strong { font-size: 20px; }
+    .summary small { color: var(--muted); }
     .warn-box {
       display: grid;
       gap: 8px;
       margin: 0 0 12px;
     }
-
-    .warning,
-    .error-note {
+    .warning, .error-note {
       border-radius: 11px;
       padding: 10px 11px;
       line-height: 1.45;
       font-size: 13px;
     }
-
     .warning {
       background: #261f12;
       border: 1px solid #5c4822;
       color: #f6d596;
     }
-
     .error-note {
       background: #281516;
       border: 1px solid #633033;
       color: #ffb7b7;
     }
-
     .table-wrap {
       overflow-x: auto;
       border: 1px solid var(--border);
       border-radius: 12px;
       background: #0f1216;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       min-width: 390px;
       font-variant-numeric: tabular-nums;
     }
-
-    th,
-    td {
+    th, td {
       padding: 8px;
       border-bottom: 1px solid #252c34;
       text-align: right;
     }
-
     th {
       position: sticky;
       top: 0;
@@ -334,17 +247,8 @@
       font-size: 12px;
       font-weight: 700;
     }
-
-    tr:last-child td {
-      border-bottom: 0;
-    }
-
-    td:first-child,
-    th:first-child {
-      text-align: center;
-      width: 30%;
-    }
-
+    tr:last-child td { border-bottom: 0; }
+    td:first-child, th:first-child { text-align: center; width: 30%; }
     .num-input {
       width: 100%;
       min-width: 70px;
@@ -360,46 +264,41 @@
       font-variant-numeric: tabular-nums;
       outline: none;
     }
-
     .num-input:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(90,169,255,.15);
     }
-
-    .num-input.item-id {
-      text-align: center;
-    }
-
-    .num-input.invalid {
-      border-color: var(--bad);
-    }
-
+    .num-input.item-id { text-align: center; }
+    .num-input.invalid { border-color: var(--bad); }
     .copy-dock {
       position: sticky;
       bottom: calc(10px + env(safe-area-inset-bottom));
       margin-top: 14px;
       padding-top: 8px;
-      background:
-        linear-gradient(
-          to bottom,
-          rgba(20,24,29,0),
-          var(--panel) 28%
-        );
+      background: linear-gradient(to bottom, rgba(20,24,29,0), var(--panel) 28%);
     }
-
-    .copy-btn {
-      box-shadow: 0 8px 24px rgba(47,143,255,.28);
-    }
-
-    .copy-btn.done {
-      background: #238657;
-    }
-
+    .sheet-copy-dock { margin-top: 10px; }
+    .copy-btn { box-shadow: 0 8px 24px rgba(47,143,255,.28); }
+    .copy-btn.done { background: #238657; }
     .copy-btn.diagnostic {
       background: #9a6a12;
       box-shadow: 0 8px 24px rgba(154,106,18,.28);
     }
-
+    .copy-btn.sheet {
+      background: #6a5acd;
+      box-shadow: 0 8px 24px rgba(106,90,205,.28);
+    }
+    .source-name {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #2e3741;
+      background: #101318;
+      color: #d9e1e8;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .source-name strong { color: #f3f5f7; }
     .tsv-preview {
       width: 100%;
       min-height: 116px;
@@ -410,61 +309,35 @@
       background: #0c0f13;
       color: #d9e1e8;
       padding: 10px;
-      font:
-        13px/1.45
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Consolas,
-        monospace;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
-
     .diagnostic-area {
       margin-top: 14px;
       color: var(--muted);
       font-size: 12px;
     }
-
     .diagnostic-title {
       margin: 14px 2px 6px;
       color: #c7d0d9;
       font-size: 13px;
       font-weight: 700;
     }
-
     #debugText {
       margin: 8px 0 0;
       white-space: pre-wrap;
       word-break: break-word;
-      font:
-        11px/1.45
-        ui-monospace,
-        SFMono-Regular,
-        Menlo,
-        Consolas,
-        monospace;
+      font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
-
     .footer-note {
       margin: 18px 3px 0;
       color: #707b86;
       font-size: 11px;
       line-height: 1.5;
     }
-
     @media (min-width: 620px) {
-      .actions {
-        grid-template-columns: 1fr auto;
-      }
-
-      .secondary {
-        width: auto;
-        padding: 0 20px;
-      }
-
-      .card {
-        padding: 18px;
-      }
+      .actions { grid-template-columns: 1fr auto; }
+      .secondary { width: auto; padding: 0 20px; }
+      .card { padding: 18px; }
     }
   </style>
 </head>
@@ -476,103 +349,51 @@
     </header>
 
     <section class="card">
-      <div class="privacy">
-        <span class="dot"></span>
-        <span>選択した画像はアップロードせず、読み取り処理はSafari内で行います。初回のみOCRライブラリと認識データをCDNから読み込みます。</span>
-      </div>
-
+      <div class="privacy"><span class="dot"></span><span>選択した画像はアップロードせず、読み取り処理はSafari内で行います。初回のみOCRライブラリと認識データをCDNから読み込みます。</span></div>
       <h2 class="section-title">1. 画像を選択</h2>
-
       <label class="file-pick">
-        <input
-          id="fileInput"
-          type="file"
-          accept="image/png,image/jpeg,image/webp,image/*"
-          multiple
-        >
+        <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/*" multiple>
         <span class="pick-face">＋ 画像を選択</span>
       </label>
-
       <div id="fileList" class="file-list"></div>
-
       <div class="actions">
-        <button id="analyzeBtn" class="primary" type="button" disabled>
-          画像を読み取る
-        </button>
-        <button id="resetBtn" class="secondary" type="button">
-          リセット
-        </button>
+        <button id="analyzeBtn" class="primary" type="button" disabled>画像を読み取る</button>
+        <button id="resetBtn" class="secondary" type="button">リセット</button>
       </div>
     </section>
 
-    <section
-      id="statusCard"
-      class="card status-card"
-      hidden
-      aria-live="polite"
-    >
+    <section id="statusCard" class="card status-card" hidden aria-live="polite">
       <div class="status-head">
         <span id="statusText">準備中…</span>
         <span id="statusSub"></span>
       </div>
-
-      <div class="progress" aria-hidden="true">
-        <div id="progressBar"></div>
-      </div>
+      <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
     </section>
 
     <section id="resultsCard" class="card results-card" hidden>
       <div class="summary">
-        <div>
-          <strong id="resultCount">0件</strong><br>
-          <small>認識結果を確認してください</small>
-        </div>
+        <div><strong id="resultCount">0件</strong><br><small>認識結果を確認してください</small></div>
       </div>
-
       <div id="warnBox" class="warn-box"></div>
-
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>番号</th>
-              <th>値A</th>
-              <th>値B</th>
-            </tr>
-          </thead>
+          <thead><tr><th>番号</th><th>値A</th><th>値B</th></tr></thead>
           <tbody id="resultBody"></tbody>
         </table>
       </div>
-
-      <textarea
-        id="tsvPreview"
-        class="tsv-preview"
-        readonly
-        spellcheck="false"
-        aria-label="整形結果プレビュー"
-      ></textarea>
-
-      <div class="copy-dock">
-        <button id="copyBtn" class="copy-btn" type="button">
-          結果をコピー
-        </button>
-      </div>
-
+      <textarea id="tsvPreview" class="tsv-preview" readonly spellcheck="false" aria-label="整形結果プレビュー"></textarea>
+      <div class="copy-dock"><button id="copyBtn" class="copy-btn" type="button">結果をコピー</button></div>
+      <div id="sourceNameBox" class="source-name" hidden><strong>認識名:</strong> <span id="sourceNameText"></span></div>
+      <textarea id="sheetTsvPreview" class="tsv-preview" readonly spellcheck="false" aria-label="スプレッドシート用プレビュー"></textarea>
+      <div class="sheet-copy-dock"><button id="sheetCopyBtn" class="copy-btn sheet" type="button">スプレッドシート用コピー</button></div>
       <div class="diagnostic-area">
-        <button
-          id="diagnosticCopyBtn"
-          class="copy-btn diagnostic"
-          type="button"
-        >
-          診断情報をコピー
-        </button>
-
+        <button id="diagnosticCopyBtn" class="copy-btn diagnostic" type="button">診断情報をコピー</button>
         <h3 class="diagnostic-title">診断情報</h3>
         <pre id="debugText"></pre>
       </div>
     </section>
 
-    <p class="footer-note">ver 20261007_124412.041</p>
+    <p class="footer-note">ver 20261007_145429.474</p>
   </main>
 
 <script>
@@ -580,23 +401,24 @@
   'use strict';
 
   const $ = (s) => document.querySelector(s);
-
   const fileInput = $('#fileInput');
   const fileList = $('#fileList');
   const analyzeBtn = $('#analyzeBtn');
   const resetBtn = $('#resetBtn');
-
   const statusCard = $('#statusCard');
   const statusText = $('#statusText');
   const statusSub = $('#statusSub');
   const progressBar = $('#progressBar');
-
   const resultsCard = $('#resultsCard');
   const resultCount = $('#resultCount');
   const resultBody = $('#resultBody');
   const warnBox = $('#warnBox');
   const tsvPreview = $('#tsvPreview');
   const copyBtn = $('#copyBtn');
+  const sourceNameBox = $('#sourceNameBox');
+  const sourceNameText = $('#sourceNameText');
+  const sheetTsvPreview = $('#sheetTsvPreview');
+  const sheetCopyBtn = $('#sheetCopyBtn');
   const diagnosticCopyBtn = $('#diagnosticCopyBtn');
   const debugText = $('#debugText');
 
@@ -605,26 +427,22 @@
   let warnings = [];
   let issues = [];
   let debugLines = [];
+  let sourceName = '';
+  let sourceNameRaw = '';
+  let sourceNameFile = '';
+  let sourceNameConfidence = null;
+  let sourceNameWarning = '';
   let busy = false;
+  const APP_VERSION = '20261007_145429.474';
 
-  const APP_VERSION = '20261007_124412.041';
-
-  const clamp = (v, lo, hi) =>
-    Math.max(lo, Math.min(hi, v));
-
-  const digitsOnly = (s) =>
-    String(s ?? '').replace(/\D/g, '');
-
-  const fmtBytes = (n) =>
-    n < 1024 * 1024
-      ? `${Math.max(1, Math.round(n / 1024))} KB`
-      : `${(n / 1024 / 1024).toFixed(1)} MB`;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
+  const fmtBytes = (n) => n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
 
   function setStatus(main, sub = '', pct = null) {
     statusCard.hidden = false;
     statusText.textContent = main;
     statusSub.textContent = sub;
-
     if (pct == null) {
       progressBar.style.width = '8%';
     } else {
@@ -634,62 +452,56 @@
 
   function renderFiles() {
     fileList.innerHTML = '';
-
     for (const f of selectedFiles) {
       const row = document.createElement('div');
       row.className = 'file-row';
-
       const name = document.createElement('span');
       name.className = 'file-name';
       name.textContent = f.name;
-
       const size = document.createElement('span');
       size.className = 'file-size';
       size.textContent = fmtBytes(f.size);
-
       row.append(name, size);
       fileList.append(row);
     }
-
-    analyzeBtn.disabled =
-      busy || selectedFiles.length === 0;
+    analyzeBtn.disabled = busy || selectedFiles.length === 0;
   }
 
   fileInput.addEventListener('change', () => {
     selectedFiles = Array.from(fileInput.files || []);
-
     renderFiles();
-
     resultsCard.hidden = true;
     statusCard.hidden = true;
   });
 
   resetBtn.addEventListener('click', () => {
-    if (busy) {
-      return;
-    }
-
+    if (busy) return;
     fileInput.value = '';
-
     selectedFiles = [];
     mergedRows = [];
     warnings = [];
     issues = [];
     debugLines = [];
-
+    sourceName = '';
+    sourceNameRaw = '';
+    sourceNameFile = '';
+    sourceNameConfidence = null;
+    sourceNameWarning = '';
     fileList.innerHTML = '';
     resultBody.innerHTML = '';
     warnBox.innerHTML = '';
     tsvPreview.value = '';
-
+    sheetTsvPreview.value = '';
+    sourceNameBox.hidden = true;
+    sourceNameText.textContent = '';
     statusCard.hidden = true;
     resultsCard.hidden = true;
-
     analyzeBtn.disabled = true;
-
     copyBtn.classList.remove('done');
     copyBtn.textContent = '結果をコピー';
-
+    sheetCopyBtn.classList.remove('done');
+    sheetCopyBtn.classList.add('sheet');
+    sheetCopyBtn.textContent = 'スプレッドシート用コピー';
     diagnosticCopyBtn.classList.remove('done');
     diagnosticCopyBtn.classList.add('diagnostic');
     diagnosticCopyBtn.textContent = '診断情報をコピー';
@@ -697,2140 +509,674 @@
 
   async function loadImageFile(file) {
     const url = URL.createObjectURL(file);
-
     try {
       const img = new Image();
       img.decoding = 'async';
       img.src = url;
-
       await new Promise((resolve, reject) => {
         img.onload = resolve;
-
-        img.onerror = () =>
-          reject(
-            new Error(
-              `${file.name} を画像として開けませんでした`
-            )
-          );
+        img.onerror = () => reject(new Error(`${file.name} を画像として開けませんでした`));
       });
-
       const canvas = document.createElement('canvas');
-
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
-
-      const ctx =
-        canvas.getContext(
-          '2d',
-          { willReadFrequently: true }
-        ) ||
-        canvas.getContext('2d');
-
+      const ctx = canvas.getContext('2d', { willReadFrequently: true }) || canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
-
-      const imageData =
-        ctx.getImageData(
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-
-      return {
-        file,
-        canvas,
-        ctx,
-        imageData,
-        width: canvas.width,
-        height: canvas.height,
-        scale: canvas.width / 1206
-      };
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      return { file, canvas, ctx, imageData, width: canvas.width, height: canvas.height, scale: canvas.width / 1206 };
     } finally {
       URL.revokeObjectURL(url);
     }
   }
 
   function rgbAt(frame, x, y) {
-    const i =
-      (y * frame.width + x) * 4;
-
+    const i = (y * frame.width + x) * 4;
     const d = frame.imageData.data;
-
-    return [
-      d[i],
-      d[i + 1],
-      d[i + 2]
-    ];
+    return [d[i], d[i + 1], d[i + 2]];
   }
 
   function lumaAt(frame, x, y) {
-    const i =
-      (y * frame.width + x) * 4;
-
+    const i = (y * frame.width + x) * 4;
     const d = frame.imageData.data;
-
-    return (
-      d[i] * 0.299 +
-      d[i + 1] * 0.587 +
-      d[i + 2] * 0.114
-    );
+    return d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
   }
 
   function fillShortFalseGaps(mask, maxGap) {
     let i = 0;
-
     while (i < mask.length) {
-      if (mask[i]) {
-        i++;
-        continue;
-      }
-
+      if (mask[i]) { i++; continue; }
       const start = i;
-
-      while (
-        i < mask.length &&
-        !mask[i]
-      ) {
-        i++;
-      }
-
+      while (i < mask.length && !mask[i]) i++;
       const len = i - start;
-
-      if (
-        start > 0 &&
-        i < mask.length &&
-        len <= maxGap
-      ) {
-        for (let j = start; j < i; j++) {
-          mask[j] = true;
-        }
+      if (start > 0 && i < mask.length && len <= maxGap) {
+        for (let j = start; j < i; j++) mask[j] = true;
       }
     }
   }
 
   function findGraySegments(frame, x0, x1) {
-    const stepX =
-      Math.max(
-        2,
-        Math.round(4 * frame.scale)
-      );
-
-    const rowMask =
-      new Uint8Array(frame.height);
-
-    for (
-      let y = 0;
-      y < frame.height;
-      y++
-    ) {
-      let gray = 0;
-      let total = 0;
-
-      for (
-        let x = x0;
-        x < x1;
-        x += stepX
-      ) {
-        const [r, g, b] =
-          rgbAt(frame, x, y);
-
-        const max =
-          Math.max(r, g, b);
-
-        const min =
-          Math.min(r, g, b);
-
-        const avg =
-          (r + g + b) / 3;
-
-        if (
-          max - min <= 8 &&
-          avg >= 118 &&
-          avg <= 178
-        ) {
-          gray++;
-        }
-
+    const stepX = Math.max(2, Math.round(4 * frame.scale));
+    const rowMask = new Uint8Array(frame.height);
+    for (let y = 0; y < frame.height; y++) {
+      let gray = 0, total = 0;
+      for (let x = x0; x < x1; x += stepX) {
+        const [r, g, b] = rgbAt(frame, x, y);
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const avg = (r + g + b) / 3;
+        if (max - min <= 8 && avg >= 118 && avg <= 178) gray++;
         total++;
       }
-
-      if (
-        total &&
-        gray / total >= 0.55
-      ) {
-        rowMask[y] = 1;
-      }
+      if (total && gray / total >= 0.55) rowMask[y] = 1;
     }
 
-    const boolMask =
-      Array.from(rowMask, Boolean);
-
-    fillShortFalseGaps(
-      boolMask,
-      Math.max(
-        1,
-        Math.round(2 * frame.scale)
-      )
-    );
-
-    const minLen =
-      Math.max(
-        28,
-        Math.round(
-          (x1 - x0) * 0.06
-        )
-      );
-
+    const boolMask = Array.from(rowMask, Boolean);
+    fillShortFalseGaps(boolMask, Math.max(1, Math.round(2 * frame.scale)));
+    const minLen = Math.max(28, Math.round((x1 - x0) * 0.06));
     const segments = [];
-
     let start = null;
-
-    for (
-      let y = 0;
-      y <= boolMask.length;
-      y++
-    ) {
-      const on =
-        y < boolMask.length
-          ? boolMask[y]
-          : false;
-
-      if (
-        on &&
-        start == null
-      ) {
-        start = y;
-      }
-
-      if (
-        !on &&
-        start != null
-      ) {
-        if (
-          y - start >= minLen
-        ) {
-          segments.push({
-            x0,
-            x1,
-            y0: start,
-            y1: y - 1
-          });
-        }
-
+    for (let y = 0; y <= boolMask.length; y++) {
+      const on = y < boolMask.length ? boolMask[y] : false;
+      if (on && start == null) start = y;
+      if (!on && start != null) {
+        if (y - start >= minLen) segments.push({ x0, x1, y0: start, y1: y - 1 });
         start = null;
       }
     }
-
     return segments;
   }
 
   function findTitleDigitBox(frame, seg) {
-    const {
-      x0,
-      x1,
-      y0,
-      y1
-    } = seg;
-
+    const { x0, x1, y0, y1 } = seg;
     const w = x1 - x0;
     const h = y1 - y0 + 1;
+    const colCount = new Uint16Array(w);
+    const minWhiteCount = Math.max(3, Math.round(5 * frame.scale));
 
-    const colCount =
-      new Uint16Array(w);
-
-    const minWhiteCount =
-      Math.max(
-        3,
-        Math.round(5 * frame.scale)
-      );
-
-    for (
-      let lx = 0;
-      lx < w;
-      lx++
-    ) {
+    for (let lx = 0; lx < w; lx++) {
       let count = 0;
-
       const x = x0 + lx;
-
-      for (
-        let y = y0;
-        y <= y1;
-        y++
-      ) {
-        if (
-          lumaAt(frame, x, y) > 190
-        ) {
-          count++;
-        }
+      for (let y = y0; y <= y1; y++) {
+        if (lumaAt(frame, x, y) > 190) count++;
       }
-
       colCount[lx] = count;
     }
 
     const runs = [];
-
     let start = null;
-
-    for (
-      let x = 0;
-      x <= w;
-      x++
-    ) {
-      const on =
-        x < w
-          ? colCount[x] > minWhiteCount
-          : false;
-
-      if (
-        on &&
-        start == null
-      ) {
-        start = x;
-      }
-
-      if (
-        !on &&
-        start != null
-      ) {
-        if (
-          x - start >= 2
-        ) {
+    for (let x = 0; x <= w; x++) {
+      const on = x < w ? colCount[x] > minWhiteCount : false;
+      if (on && start == null) start = x;
+      if (!on && start != null) {
+        if (x - start >= 2) {
           let peak = 0;
-
-          for (
-            let k = start;
-            k < x;
-            k++
-          ) {
-            peak =
-              Math.max(
-                peak,
-                colCount[k]
-              );
-          }
-
-          runs.push({
-            x0: start,
-            x1: x - 1,
-            width: x - start,
-            peak
-          });
+          for (let k = start; k < x; k++) peak = Math.max(peak, colCount[k]);
+          runs.push({ x0: start, x1: x - 1, width: x - start, peak });
         }
-
         start = null;
       }
     }
 
     const s = frame.scale;
+    const candidates = runs.filter(r =>
+      r.x0 >= 12 * s &&
+      r.width >= 8 * s && r.width <= 40 * s &&
+      r.peak >= 20 * s &&
+      r.x0 < 170 * s
+    );
 
-    const candidates =
-      runs.filter(
-        r =>
-          r.x0 >= 12 * s &&
-          r.width >= 8 * s &&
-          r.width <= 40 * s &&
-          r.peak >= 20 * s &&
-          r.x0 < 170 * s
-      );
-
-    for (
-      let i = 0;
-      i + 2 < candidates.length;
-      i++
-    ) {
-      const a = candidates[i];
-      const b = candidates[i + 1];
-      const c = candidates[i + 2];
-
-      const gap1 =
-        b.x0 - a.x1 - 1;
-
-      const gap2 =
-        c.x0 - b.x1 - 1;
-
-      if (
-        a.x0 < 80 * s &&
-        gap1 >= 4 * s &&
-        gap1 <= 30 * s &&
-        gap2 >= 3 * s &&
-        gap2 <= 30 * s
-      ) {
-        const pad =
-          Math.max(
-            3,
-            Math.round(6 * s)
-          );
-
+    for (let i = 0; i + 2 < candidates.length; i++) {
+      const a = candidates[i], b = candidates[i + 1], c = candidates[i + 2];
+      const gap1 = b.x0 - a.x1 - 1;
+      const gap2 = c.x0 - b.x1 - 1;
+      if (a.x0 < 80 * s && gap1 >= 4 * s && gap1 <= 30 * s && gap2 >= 3 * s && gap2 <= 30 * s) {
+        const pad = Math.max(3, Math.round(6 * s));
         return {
-          x0: Math.max(
-            x0,
-            x0 + a.x0 - pad
-          ),
-          y0:
-            y0 +
-            Math.max(
-              1,
-              Math.round(2 * s)
-            ),
-          x1: Math.min(
-            x1,
-            x0 + c.x1 + pad + 1
-          ),
-          y1:
-            y1 -
-            Math.max(
-              1,
-              Math.round(2 * s)
-            ) +
-            1
+          x0: Math.max(x0, x0 + a.x0 - pad),
+          y0: y0 + Math.max(1, Math.round(2 * s)),
+          x1: Math.min(x1, x0 + c.x1 + pad + 1),
+          y1: y1 - Math.max(1, Math.round(2 * s)) + 1
         };
       }
     }
-
     return null;
   }
 
   function clusterRows(left, right, tol) {
-    const all = [
-      ...left.map(
-        s => ({
-          ...s,
-          side: 'L'
-        })
-      ),
-      ...right.map(
-        s => ({
-          ...s,
-          side: 'R'
-        })
-      )
-    ].sort(
-      (a, b) =>
-        a.y0 - b.y0
-    );
-
+    const all = [...left.map(s => ({...s, side: 'L'})), ...right.map(s => ({...s, side: 'R'}))].sort((a,b) => a.y0 - b.y0);
     const groups = [];
-
     for (const item of all) {
-      const last =
-        groups[
-          groups.length - 1
-        ];
-
-      if (
-        !last ||
-        Math.abs(
-          item.y0 - last.meanY
-        ) > tol
-      ) {
-        groups.push({
-          items: [item],
-          meanY: item.y0
-        });
+      const last = groups[groups.length - 1];
+      if (!last || Math.abs(item.y0 - last.meanY) > tol) {
+        groups.push({ items: [item], meanY: item.y0 });
       } else {
         last.items.push(item);
-
-        last.meanY =
-          last.items.reduce(
-            (sum, v) =>
-              sum + v.y0,
-            0
-          ) /
-          last.items.length;
+        last.meanY = last.items.reduce((sum, v) => sum + v.y0, 0) / last.items.length;
       }
     }
-
-    return groups.map(
-      g => ({
-        L:
-          g.items.find(
-            v => v.side === 'L'
-          ) || null,
-        R:
-          g.items.find(
-            v => v.side === 'R'
-          ) || null,
-        y: g.meanY
-      })
-    );
+    return groups.map(g => ({
+      L: g.items.find(v => v.side === 'L') || null,
+      R: g.items.find(v => v.side === 'R') || null,
+      y: g.meanY
+    }));
   }
 
-  function darkRowFraction(
-    frame,
-    y,
-    x0,
-    x1
-  ) {
-    const step =
-      Math.max(
-        2,
-        Math.round(3 * frame.scale)
-      );
-
-    let dark = 0;
-    let total = 0;
-
-    for (
-      let x = x0;
-      x < x1;
-      x += step
-    ) {
-      if (
-        lumaAt(frame, x, y) < 80
-      ) {
-        dark++;
-      }
-
+  function darkRowFraction(frame, y, x0, x1) {
+    const step = Math.max(2, Math.round(3 * frame.scale));
+    let dark = 0, total = 0;
+    for (let x = x0; x < x1; x += step) {
+      if (lumaAt(frame, x, y) < 80) dark++;
       total++;
     }
-
-    return total
-      ? dark / total
-      : 0;
+    return total ? dark / total : 0;
   }
 
-  function findBodyBounds(
-    frame,
-    x0,
-    x1,
-    titleEnd
-  ) {
-    const maxY =
-      Math.min(
-        frame.height - 1,
-        titleEnd +
-          Math.round(
-            (x1 - x0) * 0.5
-          )
-      );
-
+  function findBodyBounds(frame, x0, x1, titleEnd) {
+    const maxY = Math.min(frame.height - 1, titleEnd + Math.round((x1 - x0) * 0.5));
     const groups = [];
-
     let start = null;
-
-    for (
-      let y = titleEnd + 1;
-      y <= maxY + 1;
-      y++
-    ) {
-      const on =
-        y <= maxY
-          ? darkRowFraction(
-              frame,
-              y,
-              x0,
-              x1
-            ) > 0.88
-          : false;
-
-      if (
-        on &&
-        start == null
-      ) {
-        start = y;
-      }
-
-      if (
-        !on &&
-        start != null
-      ) {
-        groups.push({
-          y0: start,
-          y1: y - 1
-        });
-
+    for (let y = titleEnd + 1; y <= maxY + 1; y++) {
+      const on = y <= maxY ? darkRowFraction(frame, y, x0, x1) > 0.88 : false;
+      if (on && start == null) start = y;
+      if (!on && start != null) {
+        groups.push({ y0: start, y1: y - 1 });
         start = null;
       }
     }
-
-    if (
-      groups.length < 2
-    ) {
-      return null;
-    }
-
-    return {
-      top: groups[0].y0,
-      bottom: groups[1].y1
-    };
+    if (groups.length < 2) return null;
+    return { top: groups[0].y0, bottom: groups[1].y1 };
   }
 
-  function darkComponents(
-    frame,
-    region,
-    threshold = 110
-  ) {
-    const x0 =
-      clamp(
-        Math.floor(region.x0),
-        0,
-        frame.width - 1
-      );
-
-    const y0 =
-      clamp(
-        Math.floor(region.y0),
-        0,
-        frame.height - 1
-      );
-
-    const x1 =
-      clamp(
-        Math.ceil(region.x1),
-        x0 + 1,
-        frame.width
-      );
-
-    const y1 =
-      clamp(
-        Math.ceil(region.y1),
-        y0 + 1,
-        frame.height
-      );
-
-    const w = x1 - x0;
-    const h = y1 - y0;
-
-    const visited =
-      new Uint8Array(w * h);
-
+  function darkComponents(frame, region, threshold = 110) {
+    const x0 = clamp(Math.floor(region.x0), 0, frame.width - 1);
+    const y0 = clamp(Math.floor(region.y0), 0, frame.height - 1);
+    const x1 = clamp(Math.ceil(region.x1), x0 + 1, frame.width);
+    const y1 = clamp(Math.ceil(region.y1), y0 + 1, frame.height);
+    const w = x1 - x0, h = y1 - y0;
+    const visited = new Uint8Array(w * h);
     const comps = [];
     const stack = [];
 
-    const isDark =
-      (lx, ly) =>
-        lumaAt(
-          frame,
-          x0 + lx,
-          y0 + ly
-        ) < threshold;
-
-    for (
-      let sy = 0;
-      sy < h;
-      sy++
-    ) {
-      for (
-        let sx = 0;
-        sx < w;
-        sx++
-      ) {
-        const seed =
-          sy * w + sx;
-
-        if (
-          visited[seed]
-        ) {
-          continue;
-        }
-
+    const isDark = (lx, ly) => lumaAt(frame, x0 + lx, y0 + ly) < threshold;
+    for (let sy = 0; sy < h; sy++) {
+      for (let sx = 0; sx < w; sx++) {
+        const seed = sy * w + sx;
+        if (visited[seed]) continue;
         visited[seed] = 1;
+        if (!isDark(sx, sy)) continue;
 
-        if (
-          !isDark(sx, sy)
-        ) {
-          continue;
-        }
-
-        let minX = sx;
-        let maxX = sx;
-        let minY = sy;
-        let maxY = sy;
-        let area = 0;
-
+        let minX = sx, maxX = sx, minY = sy, maxY = sy, area = 0;
         stack.length = 0;
         stack.push(seed);
-
-        while (
-          stack.length
-        ) {
-          const idx =
-            stack.pop();
-
-          const cy =
-            Math.floor(
-              idx / w
-            );
-
-          const cx =
-            idx - cy * w;
-
+        while (stack.length) {
+          const idx = stack.pop();
+          const cy = Math.floor(idx / w), cx = idx - cy * w;
           area++;
+          if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
+          if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
 
-          if (cx < minX) {
-            minX = cx;
-          }
-
-          if (cx > maxX) {
-            maxX = cx;
-          }
-
-          if (cy < minY) {
-            minY = cy;
-          }
-
-          if (cy > maxY) {
-            maxY = cy;
-          }
-
-          for (
-            let dy = -1;
-            dy <= 1;
-            dy++
-          ) {
-            for (
-              let dx = -1;
-              dx <= 1;
-              dx++
-            ) {
-              if (
-                !dx &&
-                !dy
-              ) {
-                continue;
-              }
-
-              const nx =
-                cx + dx;
-
-              const ny =
-                cy + dy;
-
-              if (
-                nx < 0 ||
-                nx >= w ||
-                ny < 0 ||
-                ny >= h
-              ) {
-                continue;
-              }
-
-              const ni =
-                ny * w + nx;
-
-              if (
-                visited[ni]
-              ) {
-                continue;
-              }
-
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (!dx && !dy) continue;
+              const nx = cx + dx, ny = cy + dy;
+              if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+              const ni = ny * w + nx;
+              if (visited[ni]) continue;
               visited[ni] = 1;
-
-              if (
-                isDark(nx, ny)
-              ) {
-                stack.push(ni);
-              }
+              if (isDark(nx, ny)) stack.push(ni);
             }
           }
         }
-
-        comps.push({
-          x: minX,
-          y: minY,
-          w: maxX - minX + 1,
-          h: maxY - minY + 1,
-          area
-        });
+        comps.push({ x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, area });
       }
     }
-
-    return {
-      comps,
-      x0,
-      y0,
-      x1,
-      y1
-    };
+    return { comps, x0, y0, x1, y1 };
   }
 
-  function lightComponents(
-    frame,
-    region,
-    threshold = 190
-  ) {
-    const x0 =
-      clamp(
-        Math.floor(region.x0),
-        0,
-        frame.width - 1
-      );
-
-    const y0 =
-      clamp(
-        Math.floor(region.y0),
-        0,
-        frame.height - 1
-      );
-
-    const x1 =
-      clamp(
-        Math.ceil(region.x1),
-        x0 + 1,
-        frame.width
-      );
-
-    const y1 =
-      clamp(
-        Math.ceil(region.y1),
-        y0 + 1,
-        frame.height
-      );
-
-    const w = x1 - x0;
-    const h = y1 - y0;
-
-    const visited =
-      new Uint8Array(w * h);
-
+  function lightComponents(frame, region, threshold = 190) {
+    const x0 = clamp(Math.floor(region.x0), 0, frame.width - 1);
+    const y0 = clamp(Math.floor(region.y0), 0, frame.height - 1);
+    const x1 = clamp(Math.ceil(region.x1), x0 + 1, frame.width);
+    const y1 = clamp(Math.ceil(region.y1), y0 + 1, frame.height);
+    const w = x1 - x0, h = y1 - y0;
+    const visited = new Uint8Array(w * h);
     const comps = [];
     const stack = [];
 
-    const isLight =
-      (lx, ly) =>
-        lumaAt(
-          frame,
-          x0 + lx,
-          y0 + ly
-        ) > threshold;
-
-    for (
-      let sy = 0;
-      sy < h;
-      sy++
-    ) {
-      for (
-        let sx = 0;
-        sx < w;
-        sx++
-      ) {
-        const seed =
-          sy * w + sx;
-
-        if (
-          visited[seed]
-        ) {
-          continue;
-        }
-
+    const isLight = (lx, ly) => lumaAt(frame, x0 + lx, y0 + ly) > threshold;
+    for (let sy = 0; sy < h; sy++) {
+      for (let sx = 0; sx < w; sx++) {
+        const seed = sy * w + sx;
+        if (visited[seed]) continue;
         visited[seed] = 1;
+        if (!isLight(sx, sy)) continue;
 
-        if (
-          !isLight(sx, sy)
-        ) {
-          continue;
-        }
-
-        let minX = sx;
-        let maxX = sx;
-        let minY = sy;
-        let maxY = sy;
-        let area = 0;
-
+        let minX = sx, maxX = sx, minY = sy, maxY = sy, area = 0;
         stack.length = 0;
         stack.push(seed);
-
-        while (
-          stack.length
-        ) {
-          const idx =
-            stack.pop();
-
-          const cy =
-            Math.floor(
-              idx / w
-            );
-
-          const cx =
-            idx - cy * w;
-
+        while (stack.length) {
+          const idx = stack.pop();
+          const cy = Math.floor(idx / w), cx = idx - cy * w;
           area++;
+          if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
+          if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
 
-          if (cx < minX) {
-            minX = cx;
-          }
-
-          if (cx > maxX) {
-            maxX = cx;
-          }
-
-          if (cy < minY) {
-            minY = cy;
-          }
-
-          if (cy > maxY) {
-            maxY = cy;
-          }
-
-          for (
-            let dy = -1;
-            dy <= 1;
-            dy++
-          ) {
-            for (
-              let dx = -1;
-              dx <= 1;
-              dx++
-            ) {
-              if (
-                !dx &&
-                !dy
-              ) {
-                continue;
-              }
-
-              const nx =
-                cx + dx;
-
-              const ny =
-                cy + dy;
-
-              if (
-                nx < 0 ||
-                nx >= w ||
-                ny < 0 ||
-                ny >= h
-              ) {
-                continue;
-              }
-
-              const ni =
-                ny * w + nx;
-
-              if (
-                visited[ni]
-              ) {
-                continue;
-              }
-
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (!dx && !dy) continue;
+              const nx = cx + dx, ny = cy + dy;
+              if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+              const ni = ny * w + nx;
+              if (visited[ni]) continue;
               visited[ni] = 1;
-
-              if (
-                isLight(nx, ny)
-              ) {
-                stack.push(ni);
-              }
+              if (isLight(nx, ny)) stack.push(ni);
             }
           }
         }
-
-        comps.push({
-          x: minX,
-          y: minY,
-          w: maxX - minX + 1,
-          h: maxY - minY + 1,
-          area
-        });
+        comps.push({ x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, area });
       }
     }
-
-    return {
-      comps,
-      x0,
-      y0,
-      x1,
-      y1
-    };
+    return { comps, x0, y0, x1, y1 };
   }
 
-  function findTitleDigitComponents(
-    frame,
-    titleBox
-  ) {
-    if (!titleBox) {
-      return [];
-    }
+  function findTitleDigitComponents(frame, titleBox) {
+    if (!titleBox) return [];
+    const found = lightComponents(frame, titleBox, 190);
+    const boxW = found.x1 - found.x0;
+    const boxH = found.y1 - found.y0;
+    const s = frame.scale;
 
-    const found =
-      lightComponents(
-        frame,
-        titleBox,
-        190
-      );
+    const candidates = found.comps.filter(c =>
+      c.h >= Math.max(18 * s, boxH * 0.32) &&
+      c.h <= boxH * 0.82 &&
+      c.w >= Math.max(5 * s, boxW * 0.05) &&
+      c.w <= boxW * 0.48 &&
+      c.area >= Math.max(70 * s * s, c.h * 2.5) &&
+      c.y < boxH * 0.62
+    ).sort((a, b) => a.x - b.x);
 
-    const boxW =
-      found.x1 -
-      found.x0;
-
-    const boxH =
-      found.y1 -
-      found.y0;
-
-    const s =
-      frame.scale;
-
-    const candidates =
-      found.comps
-        .filter(
-          c =>
-            c.h >=
-              Math.max(
-                18 * s,
-                boxH * 0.32
-              ) &&
-            c.h <=
-              boxH * 0.82 &&
-            c.w >=
-              Math.max(
-                5 * s,
-                boxW * 0.05
-              ) &&
-            c.w <=
-              boxW * 0.48 &&
-            c.area >=
-              Math.max(
-                70 * s * s,
-                c.h * 2.5
-              ) &&
-            c.y <
-              boxH * 0.62
-        )
-        .sort(
-          (a, b) =>
-            a.x - b.x
-        );
-
-    return candidates
-      .slice(0, 3)
-      .map(
-        c => ({
-          x0:
-            found.x0 +
-            c.x,
-          y0:
-            found.y0 +
-            c.y,
-          x1:
-            found.x0 +
-            c.x +
-            c.w,
-          y1:
-            found.y0 +
-            c.y +
-            c.h
-        })
-      );
+    // titleBox は最初の3桁付近までに絞ってある。大きな白成分の先頭3つを番号数字として使う。
+    return candidates.slice(0, 3).map(c => ({
+      x0: found.x0 + c.x,
+      y0: found.y0 + c.y,
+      x1: found.x0 + c.x + c.w,
+      y1: found.y0 + c.y + c.h
+    }));
   }
 
-  function unionComponentBox(
-    frame,
-    region,
-    filter,
-    padPx
-  ) {
-    const found =
-      darkComponents(
-        frame,
-        region,
-        110
-      );
-
-    const keep =
-      found.comps.filter(
-        filter
-      );
-
-    if (!keep.length) {
-      return null;
-    }
-
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-
+  function unionComponentBox(frame, region, filter, padPx) {
+    const found = darkComponents(frame, region, 110);
+    const keep = found.comps.filter(filter);
+    if (!keep.length) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const c of keep) {
-      minX =
-        Math.min(
-          minX,
-          c.x
-        );
-
-      minY =
-        Math.min(
-          minY,
-          c.y
-        );
-
-      maxX =
-        Math.max(
-          maxX,
-          c.x + c.w - 1
-        );
-
-      maxY =
-        Math.max(
-          maxY,
-          c.y + c.h - 1
-        );
+      minX = Math.min(minX, c.x); minY = Math.min(minY, c.y);
+      maxX = Math.max(maxX, c.x + c.w - 1); maxY = Math.max(maxY, c.y + c.h - 1);
     }
-
-    const p =
-      Math.max(
-        3,
-        Math.round(padPx)
-      );
-
+    const p = Math.max(3, Math.round(padPx));
     return {
-      x0: Math.max(
-        found.x0,
-        found.x0 +
-          minX -
-          p
-      ),
-      y0: Math.max(
-        found.y0,
-        found.y0 +
-          minY -
-          p
-      ),
-      x1: Math.min(
-        found.x1,
-        found.x0 +
-          maxX +
-          p +
-          1
-      ),
-      y1: Math.min(
-        found.y1,
-        found.y0 +
-          maxY +
-          p +
-          1
-      )
+      x0: Math.max(found.x0, found.x0 + minX - p),
+      y0: Math.max(found.y0, found.y0 + minY - p),
+      x1: Math.min(found.x1, found.x0 + maxX + p + 1),
+      y1: Math.min(found.y1, found.y0 + maxY + p + 1)
     };
   }
 
-  function findValueABox(
-    frame,
-    card
-  ) {
-    const W =
-      card.x1 - card.x0;
-
-    const H =
-      card.bottom -
-      card.top +
-      1;
-
-    const cellW =
-      W * 0.25;
-
+  function findValueABox(frame, card) {
+    const W = card.x1 - card.x0, H = card.bottom - card.top + 1, cellW = W * 0.25;
     const region = {
-      x0:
-        card.x0 +
-        cellW * 0.12,
-      x1:
-        card.x0 +
-        cellW * 0.92,
-      y0:
-        card.top +
-        H * 0.20,
-      y1:
-        card.top +
-        H * 0.92
+      x0: card.x0 + cellW * 0.12,
+      x1: card.x0 + cellW * 0.92,
+      y0: card.top + H * 0.20,
+      y1: card.top + H * 0.92
     };
-
-    const hMin =
-      Math.max(
-        20,
-        H * 0.20
-      );
-
-    const aMin =
-      Math.max(
-        80,
-        H * 0.65
-      );
-
-    return unionComponentBox(
-      frame,
-      region,
-      c =>
-        c.y >=
-          H * 0.14 &&
-        c.h >= hMin &&
-        c.area >= aMin,
-      6 * frame.scale
-    );
+    const hMin = Math.max(20, H * 0.20);
+    const aMin = Math.max(80, H * 0.65);
+    return unionComponentBox(frame, region, c => c.y >= H * 0.14 && c.h >= hMin && c.area >= aMin, 6 * frame.scale);
   }
 
-  function findValueBBox(
-    frame,
-    card
-  ) {
-    const W =
-      card.x1 - card.x0;
-
-    const H =
-      card.bottom -
-      card.top +
-      1;
-
-    const cellW =
-      W * 0.25;
-
+  function findValueBBox(frame, card) {
+    const W = card.x1 - card.x0, H = card.bottom - card.top + 1, cellW = W * 0.25;
     const region = {
-      x0:
-        card.x0 +
-        2 * cellW +
-        cellW * 0.08,
-      x1:
-        card.x0 +
-        3 * cellW -
-        cellW * 0.08,
-      y0:
-        card.top + 2,
-      y1:
-        card.top +
-        H * 0.60
+      x0: card.x0 + 2 * cellW + cellW * 0.08,
+      x1: card.x0 + 3 * cellW - cellW * 0.08,
+      y0: card.top + 2,
+      y1: card.top + H * 0.60
     };
-
-    let yMin;
-    let hMin;
-    let aMin;
-
-    if (
-      card.kind === 'full'
-    ) {
-      yMin =
-        H * 0.12;
-
-      hMin =
-        H * 0.20;
-
-      aMin =
-        H * 1.50;
+    let yMin, hMin, aMin;
+    if (card.kind === 'full') {
+      yMin = H * 0.12; hMin = H * 0.20; aMin = H * 1.50;
     } else {
-      yMin =
-        H * 0.25;
-
-      hMin =
-        Math.max(
-          18,
-          H * 0.12
-        );
-
-      aMin =
-        Math.max(
-          80,
-          H * 0.65
-        );
+      yMin = H * 0.25; hMin = Math.max(18, H * 0.12); aMin = Math.max(80, H * 0.65);
     }
-
-    return unionComponentBox(
-      frame,
-      region,
-      c =>
-        c.y >= yMin &&
-        c.h >= hMin &&
-        c.area >= aMin,
-      6 * frame.scale
-    );
+    return unionComponentBox(frame, region, c => c.y >= yMin && c.h >= hMin && c.area >= aMin, 6 * frame.scale);
   }
 
-  function makeCropCanvas(
-    frame,
-    box,
-    factor = 4
-  ) {
-    if (!box) {
-      return null;
-    }
-
-    const sx =
-      Math.max(
-        0,
-        Math.floor(box.x0)
-      );
-
-    const sy =
-      Math.max(
-        0,
-        Math.floor(box.y0)
-      );
-
-    const sw =
-      Math.max(
-        1,
-        Math.ceil(box.x1) - sx
-      );
-
-    const sh =
-      Math.max(
-        1,
-        Math.ceil(box.y1) - sy
-      );
-
-    const out =
-      document.createElement(
-        'canvas'
-      );
-
-    out.width =
-      sw * factor;
-
-    out.height =
-      sh * factor;
-
-    const ctx =
-      out.getContext('2d');
-
-    ctx.imageSmoothingEnabled =
-      true;
-
-    ctx.imageSmoothingQuality =
-      'high';
-
-    ctx.drawImage(
-      frame.canvas,
-      sx,
-      sy,
-      sw,
-      sh,
-      0,
-      0,
-      out.width,
-      out.height
-    );
-
+  function makeCropCanvas(frame, box, factor = 4) {
+    if (!box) return null;
+    const sx = Math.max(0, Math.floor(box.x0));
+    const sy = Math.max(0, Math.floor(box.y0));
+    const sw = Math.max(1, Math.ceil(box.x1) - sx);
+    const sh = Math.max(1, Math.ceil(box.y1) - sy);
+    const out = document.createElement('canvas');
+    out.width = sw * factor;
+    out.height = sh * factor;
+    const ctx = out.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(frame.canvas, sx, sy, sw, sh, 0, 0, out.width, out.height);
     return out;
   }
 
-  function makeInvertedLightBinaryCanvas(
-    frame,
-    box,
-    threshold = 190,
-    factor = 5
-  ) {
-    if (!box) {
-      return null;
-    }
+  function makeInvertedLightBinaryCanvas(frame, box, threshold = 190, factor = 5) {
+    if (!box) return null;
+    const sx = clamp(Math.floor(box.x0), 0, frame.width - 1);
+    const sy = clamp(Math.floor(box.y0), 0, frame.height - 1);
+    const ex = clamp(Math.ceil(box.x1), sx + 1, frame.width);
+    const ey = clamp(Math.ceil(box.y1), sy + 1, frame.height);
+    const sw = ex - sx, sh = ey - sy;
 
-    const sx =
-      clamp(
-        Math.floor(box.x0),
-        0,
-        frame.width - 1
-      );
-
-    const sy =
-      clamp(
-        Math.floor(box.y0),
-        0,
-        frame.height - 1
-      );
-
-    const ex =
-      clamp(
-        Math.ceil(box.x1),
-        sx + 1,
-        frame.width
-      );
-
-    const ey =
-      clamp(
-        Math.ceil(box.y1),
-        sy + 1,
-        frame.height
-      );
-
-    const sw =
-      ex - sx;
-
-    const sh =
-      ey - sy;
-
-    const small =
-      document.createElement(
-        'canvas'
-      );
-
+    const small = document.createElement('canvas');
     small.width = sw;
     small.height = sh;
+    const sctx = small.getContext('2d');
+    const binary = sctx.createImageData(sw, sh);
 
-    const sctx =
-      small.getContext('2d');
-
-    const binary =
-      sctx.createImageData(
-        sw,
-        sh
-      );
-
-    for (
-      let y = 0;
-      y < sh;
-      y++
-    ) {
-      for (
-        let x = 0;
-        x < sw;
-        x++
-      ) {
-        const v =
-          lumaAt(
-            frame,
-            sx + x,
-            sy + y
-          ) > threshold
-            ? 0
-            : 255;
-
-        const i =
-          (y * sw + x) * 4;
-
+    for (let y = 0; y < sh; y++) {
+      for (let x = 0; x < sw; x++) {
+        // 元画像は「灰色背景 + 明るい数字」。OCR向けに「白背景 + 黒数字」へ反転二値化する。
+        const v = lumaAt(frame, sx + x, sy + y) > threshold ? 0 : 255;
+        const i = (y * sw + x) * 4;
         binary.data[i] = v;
         binary.data[i + 1] = v;
         binary.data[i + 2] = v;
         binary.data[i + 3] = 255;
       }
     }
+    sctx.putImageData(binary, 0, 0);
 
-    sctx.putImageData(
-      binary,
-      0,
-      0
-    );
-
-    const border =
-      Math.max(
-        16,
-        Math.round(
-          4 * factor
-        )
-      );
-
-    const out =
-      document.createElement(
-        'canvas'
-      );
-
-    out.width =
-      sw * factor +
-      border * 2;
-
-    out.height =
-      sh * factor +
-      border * 2;
-
-    const ctx =
-      out.getContext('2d');
-
+    const border = Math.max(16, Math.round(4 * factor));
+    const out = document.createElement('canvas');
+    out.width = sw * factor + border * 2;
+    out.height = sh * factor + border * 2;
+    const ctx = out.getContext('2d');
     ctx.fillStyle = '#fff';
-
-    ctx.fillRect(
-      0,
-      0,
-      out.width,
-      out.height
-    );
-
-    ctx.imageSmoothingEnabled =
-      false;
-
-    ctx.drawImage(
-      small,
-      0,
-      0,
-      sw,
-      sh,
-      border,
-      border,
-      sw * factor,
-      sh * factor
-    );
-
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(small, 0, 0, sw, sh, border, border, sw * factor, sh * factor);
     return out;
   }
 
-  function makeTitleOcrCanvas(
-    frame,
-    titleBox,
-    threshold = 190,
-    factor = 5
-  ) {
-    const digits =
-      findTitleDigitComponents(
-        frame,
-        titleBox
-      );
+  function makeTitleOcrCanvas(frame, titleBox, threshold = 190, factor = 5) {
+    const digits = findTitleDigitComponents(frame, titleBox);
+    if (digits.length !== 3) return { canvas: null, digitBoxes: digits, sourceBox: null };
 
-    if (
-      digits.length !== 3
-    ) {
-      return {
-        canvas: null,
-        digitBoxes: digits,
-        sourceBox: null
-      };
-    }
-
-    let x0 = Infinity;
-    let y0 = Infinity;
-    let x1 = -Infinity;
-    let y1 = -Infinity;
-
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for (const d of digits) {
-      x0 =
-        Math.min(
-          x0,
-          d.x0
-        );
-
-      y0 =
-        Math.min(
-          y0,
-          d.y0
-        );
-
-      x1 =
-        Math.max(
-          x1,
-          d.x1
-        );
-
-      y1 =
-        Math.max(
-          y1,
-          d.y1
-        );
+      x0 = Math.min(x0, d.x0);
+      y0 = Math.min(y0, d.y0);
+      x1 = Math.max(x1, d.x1);
+      y1 = Math.max(y1, d.y1);
     }
 
-    const padX =
-      Math.max(
-        2,
-        Math.round(
-          3 * frame.scale
-        )
-      );
-
-    const padTop =
-      Math.max(
-        1,
-        Math.round(
-          2 * frame.scale
-        )
-      );
-
+    // 数字本体だけの高さを使い、下側には余白を足さない。これでタイトル下部の長い下線をOCR画像へ戻さない。
+    const padX = Math.max(2, Math.round(3 * frame.scale));
+    const padTop = Math.max(1, Math.round(2 * frame.scale));
     const sourceBox = {
-      x0:
-        Math.max(
-          titleBox.x0,
-          Math.floor(
-            x0 - padX
-          )
-        ),
-      y0:
-        Math.max(
-          titleBox.y0,
-          Math.floor(
-            y0 - padTop
-          )
-        ),
-      x1:
-        Math.min(
-          titleBox.x1,
-          Math.ceil(
-            x1 + padX
-          )
-        ),
-      y1:
-        Math.min(
-          titleBox.y1,
-          Math.ceil(y1)
-        )
+      x0: Math.max(titleBox.x0, Math.floor(x0 - padX)),
+      y0: Math.max(titleBox.y0, Math.floor(y0 - padTop)),
+      x1: Math.min(titleBox.x1, Math.ceil(x1 + padX)),
+      y1: Math.min(titleBox.y1, Math.ceil(y1))
     };
-
     return {
-      canvas:
-        makeInvertedLightBinaryCanvas(
-          frame,
-          sourceBox,
-          threshold,
-          factor
-        ),
+      canvas: makeInvertedLightBinaryCanvas(frame, sourceBox, threshold, factor),
       digitBoxes: digits,
       sourceBox
     };
   }
 
-  function prepareFrame(
-    frame,
-    fileIndex
-  ) {
-    const half =
-      Math.floor(
-        frame.width / 2
-      );
+  function prepareFrame(frame, fileIndex) {
+    const half = Math.floor(frame.width / 2);
+    const left = findGraySegments(frame, 0, half);
+    const right = findGraySegments(frame, half, frame.width);
+    for (const seg of [...left, ...right]) seg.titleBox = findTitleDigitBox(frame, seg);
 
-    const left =
-      findGraySegments(
-        frame,
-        0,
-        half
-      );
-
-    const right =
-      findGraySegments(
-        frame,
-        half,
-        frame.width
-      );
-
-    for (
-      const seg of [
-        ...left,
-        ...right
-      ]
-    ) {
-      seg.titleBox =
-        findTitleDigitBox(
-          frame,
-          seg
-        );
-    }
-
-    const rows =
-      clusterRows(
-        left,
-        right,
-        Math.max(
-          5,
-          8 * frame.scale
-        )
-      );
-
+    const rows = clusterRows(left, right, Math.max(5, 8 * frame.scale));
     const cards = [];
-
     for (const row of rows) {
-      const L = row.L;
-      const R = row.R;
+      const L = row.L, R = row.R;
+      const hasL = Boolean(L?.titleBox), hasR = Boolean(R?.titleBox);
+      if (!hasL && !hasR) continue;
 
-      const hasL =
-        Boolean(
-          L?.titleBox
-        );
-
-      const hasR =
-        Boolean(
-          R?.titleBox
-        );
-
-      if (
-        !hasL &&
-        !hasR
-      ) {
-        continue;
-      }
-
-      const pushCard =
-        (
-          seg,
-          x0,
-          x1,
-          kind,
-          titleEnd
-        ) => {
-          const body =
-            findBodyBounds(
-              frame,
-              x0,
-              x1,
-              titleEnd
-            );
-
-          const card = {
-            frame,
-            fileIndex,
-            fileName:
-              frame.file.name,
-
-            titleBox:
-              seg.titleBox,
-
-            itemNumber:
-              null,
-
-            itemConfidence:
-              null,
-
-            itemMethod:
-              null,
-
-            itemRaw:
-              '',
-
-            itemAttempts:
-              [],
-
-            itemInferred:
-              false,
-
-            x0,
-            x1,
-            kind,
-
-            top:
-              body?.top ??
-              null,
-
-            bottom:
-              body?.bottom ??
-              null,
-
-            valueABox:
-              null,
-
-            valueBBox:
-              null,
-
-            valueA:
-              null,
-
-            valueB:
-              null,
-
-            valueAConfidence:
-              null,
-
-            valueBConfidence:
-              null,
-
-            captureState:
-              body
-                ? 'complete'
-                : 'partial',
-
-            errors: []
-          };
-
-          if (!body) {
-            card.errors.push(
-              '読み取り領域が画像内に完全には収まっていません'
-            );
-          } else {
-            card.valueABox =
-              findValueABox(
-                frame,
-                card
-              );
-
-            card.valueBBox =
-              findValueBBox(
-                frame,
-                card
-              );
-
-            if (
-              !card.valueABox
-            ) {
-              card.errors.push(
-                '値Aの領域を検出できませんでした'
-              );
-            }
-
-            if (
-              !card.valueBBox
-            ) {
-              card.errors.push(
-                '値Bの領域を検出できませんでした'
-              );
-            }
-
-            if (
-              !card.valueABox ||
-              !card.valueBBox
-            ) {
-              card.captureState =
-                'partial';
-            }
-          }
-
-          cards.push(card);
+      const pushCard = (seg, x0, x1, kind, titleEnd) => {
+        const body = findBodyBounds(frame, x0, x1, titleEnd);
+        const card = {
+          frame, fileIndex, fileName: frame.file.name,
+          titleBox: seg.titleBox, itemNumber: null, itemConfidence: null,
+          itemMethod: null, itemRaw: '', itemAttempts: [], itemInferred: false,
+          x0, x1, kind, top: body?.top ?? null, bottom: body?.bottom ?? null,
+          valueABox: null, valueBBox: null, valueA: null, valueB: null,
+          valueAConfidence: null, valueBConfidence: null,
+          captureState: body ? 'complete' : 'partial',
+          errors: []
         };
-
-      if (
-        hasL &&
-        hasR
-      ) {
-        pushCard(
-          L,
-          0,
-          half,
-          'half',
-          L.y1
-        );
-
-        pushCard(
-          R,
-          half,
-          frame.width,
-          'half',
-          R.y1
-        );
-      } else if (
-        hasL
-      ) {
-        if (R) {
-          pushCard(
-            L,
-            0,
-            frame.width,
-            'full',
-            Math.max(
-              L.y1,
-              R.y1
-            )
-          );
+        if (!body) {
+          // 画面端などで本体が途中までしか写っていない候補。重複統合時に完全版があれば静かに破棄する。
+          card.errors.push('読み取り領域が画像内に完全には収まっていません');
         } else {
-          pushCard(
-            L,
-            0,
-            half,
-            'half',
-            L.y1
-          );
+          card.valueABox = findValueABox(frame, card);
+          card.valueBBox = findValueBBox(frame, card);
+          if (!card.valueABox) card.errors.push('値Aの領域を検出できませんでした');
+          if (!card.valueBBox) card.errors.push('値Bの領域を検出できませんでした');
+          if (!card.valueABox || !card.valueBBox) card.captureState = 'partial';
         }
-      } else if (
-        hasR
-      ) {
-        pushCard(
-          R,
-          half,
-          frame.width,
-          'half',
-          R.y1
-        );
+        cards.push(card);
+      };
+
+      if (hasL && hasR) {
+        pushCard(L, 0, half, 'half', L.y1);
+        pushCard(R, half, frame.width, 'half', R.y1);
+      } else if (hasL) {
+        if (R) pushCard(L, 0, frame.width, 'full', Math.max(L.y1, R.y1));
+        else pushCard(L, 0, half, 'half', L.y1);
+      } else if (hasR) {
+        pushCard(R, half, frame.width, 'half', R.y1);
       }
     }
 
-    debugLines.push(
-      `${frame.file.name}: ${frame.width}×${frame.height}, gray L=${left.length}, R=${right.length}, cards=${cards.length}`
-    );
-
+    debugLines.push(`${frame.file.name}: ${frame.width}×${frame.height}, gray L=${left.length}, R=${right.length}, cards=${cards.length}`);
     return cards;
   }
 
-  async function recognizeCanvas(
-    worker,
-    canvas
-  ) {
-    if (!canvas) {
-      return {
-        value: null,
-        confidence: null,
-        raw: ''
-      };
+  function makeSourceNameCanvas(frame, binary = false, factor = 2.4) {
+    const box = {
+      x0: Math.round(frame.width * 0.08),
+      y0: Math.round(frame.height * 0.12),
+      x1: Math.round(frame.width * 0.92),
+      y1: Math.round(frame.height * 0.168)
+    };
+    const w = Math.max(1, box.x1 - box.x0);
+    const h = Math.max(1, box.y1 - box.y0);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(w * factor));
+    canvas.height = Math.max(1, Math.round(h * factor));
+    const ctx = canvas.getContext('2d', { willReadFrequently: true }) || canvas.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(frame.canvas, box.x0, box.y0, w, h, 0, 0, canvas.width, canvas.height);
+
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const y = d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+      let v;
+      if (binary) {
+        v = y < 190 ? 0 : 255;
+      } else {
+        v = clamp((y - 92) * 1.65, 0, 255);
+      }
+      d[i] = d[i + 1] = d[i + 2] = v;
+      d[i + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+    return canvas;
+  }
+
+  function cleanSourceNameLine(text) {
+    return String(text ?? '')
+      .replace(/[\s\u3000]+/g, '')
+      .replace(/^[|｜\[\]{}()（）「」『』【】]+|[|｜\[\]{}()（）「」『』【】]+$/g, '')
+      .trim();
+  }
+
+  function pickSourceName(raw) {
+    const lines = String(raw ?? '')
+      .split(/\r?\n+/)
+      .map(cleanSourceNameLine)
+      .filter(Boolean);
+    let best = '';
+    let bestScore = -Infinity;
+    for (const line of lines) {
+      const jpCount = (line.match(/[\u3040-\u30ff\u3400-\u9fff]/g) || []).length;
+      const hasStoreSuffix = line.includes('店');
+      const score = (hasStoreSuffix ? 100 : 0) + jpCount * 2 + Math.min(line.length, 40);
+      if (hasStoreSuffix && jpCount >= 4 && score > bestScore) {
+        best = line;
+        bestScore = score;
+      }
+    }
+    return best;
+  }
+
+  async function recognizeSourceName(worker, frames) {
+    sourceName = '';
+    sourceNameRaw = '';
+    sourceNameFile = '';
+    sourceNameConfidence = null;
+    sourceNameWarning = '';
+
+    await worker.setParameters({
+      tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_LINE ?? '7',
+      preserve_interword_spaces: '1',
+      user_defined_dpi: '300'
+    });
+
+    const attempts = [];
+    for (const frame of frames) {
+      for (const binary of [false, true]) {
+        const canvas = makeSourceNameCanvas(frame, binary);
+        const res = await worker.recognize(canvas);
+        const raw = String(res?.data?.text ?? '').trim();
+        const confidence = Number(res?.data?.confidence ?? 0);
+        const picked = pickSourceName(raw);
+        attempts.push({ fileName: frame.file.name, binary, raw, confidence, picked });
+        if (picked) {
+          sourceName = picked;
+          sourceNameRaw = raw;
+          sourceNameFile = frame.file.name;
+          sourceNameConfidence = confidence;
+          debugLines.push(`名称: ${picked} | ${frame.file.name} | ${binary ? 'binary' : 'gray'} | confidence=${Math.round(confidence)} | raw=${JSON.stringify(raw)}`);
+          return;
+        }
+      }
     }
 
-    const res =
-      await worker.recognize(
-        canvas
-      );
+    sourceNameWarning = '名称を認識できなかったため、スプレッドシート用コピーは利用できません。';
+    for (const a of attempts) {
+      debugLines.push(`名称候補なし | ${a.fileName} | ${a.binary ? 'binary' : 'gray'} | confidence=${Math.round(a.confidence)} | raw=${JSON.stringify(a.raw)}`);
+    }
+  }
 
-    const raw =
-      res?.data?.text ??
-      '';
-
-    const ds =
-      digitsOnly(raw);
-
+  async function recognizeCanvas(worker, canvas) {
+    if (!canvas) return { value: null, confidence: null, raw: '' };
+    const res = await worker.recognize(canvas);
+    const raw = res?.data?.text ?? '';
+    const ds = digitsOnly(raw);
     return {
-      value:
-        ds
-          ? Number(ds)
-          : null,
-      confidence:
-        Number.isFinite(
-          res?.data?.confidence
-        )
-          ? res.data.confidence
-          : null,
+      value: ds ? Number(ds) : null,
+      confidence: Number.isFinite(res?.data?.confidence) ? res.data.confidence : null,
       raw
     };
   }
 
-  function assignItemResult(
-    card,
-    result,
-    method
-  ) {
-    const ds =
-      digitsOnly(
-        result.raw
-      );
-
-    card.itemAttempts.push({
-      method,
-      raw:
-        result.raw.trim(),
-      confidence:
-        result.confidence
-    });
-
-    if (
-      ds.length !== 3
-    ) {
-      return false;
-    }
-
-    card.itemNumber =
-      Number(ds);
-
-    card.itemConfidence =
-      result.confidence;
-
-    card.itemRaw =
-      result.raw;
-
-    card.itemMethod =
-      method;
-
+  function assignItemResult(card, result, method) {
+    const ds = digitsOnly(result.raw);
+    card.itemAttempts.push({ method, raw: result.raw.trim(), confidence: result.confidence });
+    if (ds.length !== 3) return false;
+    card.itemNumber = Number(ds);
+    card.itemConfidence = result.confidence;
+    card.itemRaw = result.raw;
+    card.itemMethod = method;
     return true;
   }
 
-  async function recognizeItemNumber(
-    worker,
-    card
-  ) {
-    const primary =
-      makeTitleOcrCanvas(
-        card.frame,
-        card.titleBox,
-        190,
-        5
-      );
-
-    if (
-      primary.canvas
-    ) {
-      const r =
-        await recognizeCanvas(
-          worker,
-          primary.canvas
-        );
-
-      if (
-        assignItemResult(
-          card,
-          r,
-          'binary-190'
-        )
-      ) {
-        return;
-      }
+  async function recognizeItemNumber(worker, card) {
+    const primary = makeTitleOcrCanvas(card.frame, card.titleBox, 190, 5);
+    if (primary.canvas) {
+      const r = await recognizeCanvas(worker, primary.canvas);
+      if (assignItemResult(card, r, 'binary-190')) return;
     } else {
-      card.itemAttempts.push({
-        method:
-          'binary-190',
-        raw: '',
-        confidence: null
-      });
+      card.itemAttempts.push({ method: 'binary-190', raw: '', confidence: null });
     }
 
-    await worker.setParameters({
-      tessedit_pageseg_mode:
-        Tesseract.PSM
-          ?.SINGLE_LINE ??
-        '7'
-    });
-
-    const retryLow =
-      makeTitleOcrCanvas(
-        card.frame,
-        card.titleBox,
-        175,
-        5
-      );
-
-    if (
-      retryLow.canvas
-    ) {
-      const r =
-        await recognizeCanvas(
-          worker,
-          retryLow.canvas
-        );
-
-      if (
-        assignItemResult(
-          card,
-          r,
-          'retry-175'
-        )
-      ) {
-        await worker.setParameters({
-          tessedit_pageseg_mode:
-            Tesseract.PSM
-              ?.SINGLE_WORD ??
-            '8'
-        });
-
+    // 一次認識に失敗した項目だけ、閾値とPSMを変えて再試行する。
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_LINE ?? '7' });
+    const retryLow = makeTitleOcrCanvas(card.frame, card.titleBox, 175, 5);
+    if (retryLow.canvas) {
+      const r = await recognizeCanvas(worker, retryLow.canvas);
+      if (assignItemResult(card, r, 'retry-175')) {
+        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
         return;
       }
     }
 
-    const retryHigh =
-      makeTitleOcrCanvas(
-        card.frame,
-        card.titleBox,
-        205,
-        5
-      );
-
-    if (
-      retryHigh.canvas
-    ) {
-      const r =
-        await recognizeCanvas(
-          worker,
-          retryHigh.canvas
-        );
-
-      if (
-        assignItemResult(
-          card,
-          r,
-          'retry-205'
-        )
-      ) {
-        await worker.setParameters({
-          tessedit_pageseg_mode:
-            Tesseract.PSM
-              ?.SINGLE_WORD ??
-            '8'
-        });
-
+    const retryHigh = makeTitleOcrCanvas(card.frame, card.titleBox, 205, 5);
+    if (retryHigh.canvas) {
+      const r = await recognizeCanvas(worker, retryHigh.canvas);
+      if (assignItemResult(card, r, 'retry-205')) {
+        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
         return;
       }
     }
 
-    await worker.setParameters({
-      tessedit_pageseg_mode:
-        Tesseract.PSM
-          ?.SINGLE_WORD ??
-        '8'
-    });
-
-    card.itemMethod =
-      'unresolved';
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    card.itemMethod = 'unresolved';
   }
 
   function inferMissingItemNumbers(cards) {
-    const byFile =
-      new Map();
-
-    for (
-      const card of cards
-    ) {
-      if (
-        !byFile.has(
-          card.fileIndex
-        )
-      ) {
-        byFile.set(
-          card.fileIndex,
-          []
-        );
-      }
-
-      byFile
-        .get(
-          card.fileIndex
-        )
-        .push(card);
+    const byFile = new Map();
+    for (const card of cards) {
+      if (!byFile.has(card.fileIndex)) byFile.set(card.fileIndex, []);
+      byFile.get(card.fileIndex).push(card);
     }
 
-    for (
-      const list of
-        byFile.values()
-    ) {
+    for (const list of byFile.values()) {
       let i = 0;
-
-      while (
-        i < list.length
-      ) {
-        if (
-          Number.isInteger(
-            list[i]
-              .itemNumber
-          )
-        ) {
+      while (i < list.length) {
+        if (Number.isInteger(list[i].itemNumber)) {
           i++;
           continue;
         }
 
-        const start =
-          i;
+        const start = i;
+        while (i < list.length && !Number.isInteger(list[i].itemNumber)) i++;
+        const end = i - 1;
+        const missingCount = end - start + 1;
+        const prev = start > 0 ? list[start - 1].itemNumber : null;
+        const next = i < list.length ? list[i].itemNumber : null;
 
-        while (
-          i < list.length &&
-          !Number.isInteger(
-            list[i]
-              .itemNumber
-          )
-        ) {
-          i++;
-        }
-
-        const end =
-          i - 1;
-
-        const missingCount =
-          end -
-          start +
-          1;
-
-        const prev =
-          start > 0
-            ? list[
-                start - 1
-              ].itemNumber
-            : null;
-
-        const next =
-          i < list.length
-            ? list[i]
-                .itemNumber
-            : null;
-
+        // 前後が確定しており、その間に入る連番が一意に決まる場合だけ補完する。
         if (
-          Number.isInteger(
-            prev
-          ) &&
-          Number.isInteger(
-            next
-          ) &&
-          next - prev ===
-            missingCount +
-            1
+          Number.isInteger(prev) &&
+          Number.isInteger(next) &&
+          next - prev === missingCount + 1
         ) {
-          for (
-            let k = start;
-            k <= end;
-            k++
-          ) {
-            const card =
-              list[k];
-
-            card.itemNumber =
-              prev +
-              (
-                k -
-                start
-              ) +
-              1;
-
-            card.itemConfidence =
-              null;
-
-            card.itemMethod =
-              'sequence';
-
-            card.itemInferred =
-              true;
+          for (let k = start; k <= end; k++) {
+            const card = list[k];
+            card.itemNumber = prev + (k - start) + 1;
+            card.itemConfidence = null;
+            card.itemMethod = 'sequence';
+            card.itemInferred = true;
           }
         }
       }
@@ -2838,1280 +1184,491 @@
   }
 
   function isUsableComplete(card) {
-    return (
-      card.captureState ===
-        'complete' &&
-      Number.isInteger(
-        card.itemNumber
-      ) &&
-      Number.isInteger(
-        card.valueA
-      ) &&
-      Number.isInteger(
-        card.valueB
-      )
-    );
+    return card.captureState === 'complete' &&
+      Number.isInteger(card.itemNumber) &&
+      Number.isInteger(card.valueA) &&
+      Number.isInteger(card.valueB);
   }
 
   function candidateScore(card) {
     let score = 0;
-
-    if (
-      card.captureState ===
-      'complete'
-    ) {
-      score += 1000;
-    }
-
-    if (
-      Number.isInteger(
-        card.valueA
-      )
-    ) {
-      score += 100;
-    }
-
-    if (
-      Number.isInteger(
-        card.valueB
-      )
-    ) {
-      score += 100;
-    }
-
-    if (
-      Number.isInteger(
-        card.itemNumber
-      )
-    ) {
-      score += 50;
-    }
-
-    score +=
-      Math.max(
-        0,
-        card.valueAConfidence ??
-          0
-      ) /
-      10;
-
-    score +=
-      Math.max(
-        0,
-        card.valueBConfidence ??
-          0
-      ) /
-      10;
-
+    if (card.captureState === 'complete') score += 1000;
+    if (Number.isInteger(card.valueA)) score += 100;
+    if (Number.isInteger(card.valueB)) score += 100;
+    if (Number.isInteger(card.itemNumber)) score += 50;
+    score += Math.max(0, card.valueAConfidence ?? 0) / 10;
+    score += Math.max(0, card.valueBConfidence ?? 0) / 10;
     return score;
   }
 
-  function addIssue(
-    type,
-    message,
-    data = {}
-  ) {
-    issues.push({
-      type,
-      message,
-      ...data
-    });
+  function addIssue(type, message, data = {}) {
+    issues.push({ type, message, ...data });
   }
 
   function mergeEntries(cards) {
     warnings = [];
     issues = [];
 
-    const groups =
-      new Map();
-
+    const groups = new Map();
     const unresolved = [];
 
-    for (
-      const card of cards
-    ) {
-      if (
-        !Number.isInteger(
-          card.itemNumber
-        )
-      ) {
-        unresolved.push(
-          card
-        );
-
+    for (const card of cards) {
+      if (!Number.isInteger(card.itemNumber)) {
+        unresolved.push(card);
         continue;
       }
-
-      if (
-        !groups.has(
-          card.itemNumber
-        )
-      ) {
-        groups.set(
-          card.itemNumber,
-          []
-        );
-      }
-
-      groups
-        .get(
-          card.itemNumber
-        )
-        .push(card);
+      if (!groups.has(card.itemNumber)) groups.set(card.itemNumber, []);
+      groups.get(card.itemNumber).push(card);
     }
 
     const rows = [];
 
-    for (
-      const [
-        itemNumber,
-        candidates
-      ] of [
-        ...groups.entries()
-      ].sort(
-        (a, b) =>
-          a[0] - b[0]
-      )
-    ) {
-      const usable =
-        candidates.filter(
-          isUsableComplete
-        );
+    for (const [itemNumber, candidates] of [...groups.entries()].sort((a, b) => a[0] - b[0])) {
+      const usable = candidates.filter(isUsableComplete);
 
-      if (
-        usable.length
-      ) {
-        const signatures =
-          new Map();
-
-        for (
-          const c of usable
-        ) {
-          const sig =
-            `${c.valueA}\t${c.valueB}`;
-
-          if (
-            !signatures.has(
-              sig
-            )
-          ) {
-            signatures.set(
-              sig,
-              []
-            );
-          }
-
-          signatures
-            .get(sig)
-            .push(c);
+      if (usable.length) {
+        // 完全に読めた候補同士だけを比較する。不完全な重複候補はここでは異常にしない。
+        const signatures = new Map();
+        for (const c of usable) {
+          const sig = `${c.valueA}\t${c.valueB}`;
+          if (!signatures.has(sig)) signatures.set(sig, []);
+          signatures.get(sig).push(c);
         }
 
-        if (
-          signatures.size ===
-          1
-        ) {
-          const chosen =
-            [...usable].sort(
-              (a, b) =>
-                candidateScore(
-                  b
-                ) -
-                candidateScore(
-                  a
-                )
-            )[0];
+        if (signatures.size === 1) {
+          // 同値なら、OCR信頼度を含むスコアが最も高い候補を採用。
+          const chosen = [...usable].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
+          rows.push(chosen);
 
-          rows.push(
-            chosen
-          );
-
-          const discardedPartial =
-            candidates.filter(
-              c =>
-                c !==
-                  chosen &&
-                !isUsableComplete(
-                  c
-                )
-            );
-
-          if (
-            discardedPartial.length
-          ) {
-            debugLines.push(
-              `${itemNumber}: 不完全な重複候補 ${discardedPartial.length}件を完全版があるため除外`
-            );
+          const discardedPartial = candidates.filter(c => c !== chosen && !isUsableComplete(c));
+          if (discardedPartial.length) {
+            debugLines.push(`${itemNumber}: 不完全な重複候補 ${discardedPartial.length}件を完全版があるため除外`);
           }
-
-          if (
-            usable.length > 1
-          ) {
-            debugLines.push(
-              `${itemNumber}: 完全な重複候補 ${usable.length}件は値一致のため統合`
-            );
+          if (usable.length > 1) {
+            debugLines.push(`${itemNumber}: 完全な重複候補 ${usable.length}件は値一致のため統合`);
           }
         } else {
-          const chosen =
-            [...usable].sort(
-              (a, b) =>
-                candidateScore(
-                  b
-                ) -
-                candidateScore(
-                  a
-                )
-            )[0];
-
-          rows.push(
-            chosen
-          );
-
-          const variants =
-            [
-              ...signatures.keys()
-            ]
-              .map(
-                v =>
-                  v.replace(
-                    '\t',
-                    ' / '
-                  )
-              )
-              .join(' , ');
-
+          // 完全候補同士で値が食い違う場合は、自動で決めない。表示用には最高スコア候補を残すが異常扱い。
+          const chosen = [...usable].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
+          rows.push(chosen);
+          const variants = [...signatures.keys()].map(v => v.replace('\t', ' / ')).join(' , ');
           addIssue(
             'conflict',
             `${itemNumber}番の完全な認識結果が画像間で一致しません（${variants}）。`,
-            {
-              itemNumber
-            }
+            { itemNumber }
           );
         }
-
         continue;
       }
 
-      const chosen =
-        [...candidates].sort(
-          (a, b) =>
-            candidateScore(
-              b
-            ) -
-            candidateScore(
-              a
-            )
-        )[0];
+      // 完全に確定できる候補が1件もない。最も情報量の多い候補を表示し、異常扱いにする。
+      const chosen = [...candidates].sort((a, b) => candidateScore(b) - candidateScore(a))[0];
+      rows.push(chosen);
 
-      rows.push(
-        chosen
-      );
-
-      if (
-        candidates.every(
-          c =>
-            c.captureState ===
-            'partial'
-        )
-      ) {
+      if (candidates.every(c => c.captureState === 'partial')) {
         addIssue(
           'partial-only',
           `${itemNumber}番は画像内に完全な読み取り領域がありません。`,
-          {
-            itemNumber
-          }
+          { itemNumber }
         );
       } else {
-        if (
-          chosen.valueA ==
-          null
-        ) {
-          addIssue(
-            'missing-value-a',
-            `${itemNumber}番の値Aを確定できませんでした。`,
-            {
-              itemNumber
-            }
-          );
+        if (chosen.valueA == null) {
+          addIssue('missing-value-a', `${itemNumber}番の値Aを確定できませんでした。`, { itemNumber });
         }
-
-        if (
-          chosen.valueB ==
-          null
-        ) {
-          addIssue(
-            'missing-value-b',
-            `${itemNumber}番の値Bを確定できませんでした。`,
-            {
-              itemNumber
-            }
-          );
+        if (chosen.valueB == null) {
+          addIssue('missing-value-b', `${itemNumber}番の値Bを確定できませんでした。`, { itemNumber });
         }
       }
     }
 
-    for (
-      const c of unresolved
-    ) {
+    // 番号自体を確定できなかった候補は、完全/不完全を問わず診断対象に残す。
+    for (const c of unresolved) {
       rows.push(c);
-
-      const attempts =
-        c.itemAttempts.length
-          ? c.itemAttempts
-              .map(
-                a =>
-                  `${a.method}:${JSON.stringify(a.raw)}`
-              )
-              .join(' / ')
-          : 'OCR候補なし';
-
+      const attempts = c.itemAttempts.length
+        ? c.itemAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(' / ')
+        : 'OCR候補なし';
       addIssue(
         'missing-item-number',
         `${c.fileName}: 番号を確定できない項目があります（${attempts}）。`,
-        {
-          fileName:
-            c.fileName
-        }
+        { fileName: c.fileName }
       );
     }
 
-    rows.sort(
-      (a, b) => {
-        if (
-          Number.isInteger(
-            a.itemNumber
-          ) &&
-          Number.isInteger(
-            b.itemNumber
-          )
-        ) {
-          return (
-            a.itemNumber -
-            b.itemNumber
-          );
-        }
+    rows.sort((a, b) => {
+      if (Number.isInteger(a.itemNumber) && Number.isInteger(b.itemNumber)) return a.itemNumber - b.itemNumber;
+      if (Number.isInteger(a.itemNumber)) return -1;
+      if (Number.isInteger(b.itemNumber)) return 1;
+      return a.fileIndex - b.fileIndex;
+    });
 
-        if (
-          Number.isInteger(
-            a.itemNumber
-          )
-        ) {
-          return -1;
-        }
+    const itemNumbers = rows
+      .filter(r => Number.isInteger(r.itemNumber))
+      .map(r => r.itemNumber)
+      .sort((a, b) => a - b);
 
-        if (
-          Number.isInteger(
-            b.itemNumber
-          )
-        ) {
-          return 1;
-        }
-
-        return (
-          a.fileIndex -
-          b.fileIndex
-        );
-      }
-    );
-
-    const itemNumbers =
-      rows
-        .filter(
-          r =>
-            Number.isInteger(
-              r.itemNumber
-            )
-        )
-        .map(
-          r =>
-            r.itemNumber
-        )
-        .sort(
-          (a, b) =>
-            a - b
-        );
-
-    if (
-      itemNumbers.length >=
-      2
-    ) {
-      const known =
-        new Set(
-          itemNumbers
-        );
-
+    if (itemNumbers.length >= 2) {
+      const known = new Set(itemNumbers);
       const missing = [];
-
-      for (
-        let n =
-          itemNumbers[0];
-        n <=
-          itemNumbers[
-            itemNumbers.length -
-            1
-          ];
-        n++
-      ) {
-        if (
-          !known.has(n)
-        ) {
-          missing.push(n);
-        }
+      for (let n = itemNumbers[0]; n <= itemNumbers[itemNumbers.length - 1]; n++) {
+        if (!known.has(n)) missing.push(n);
       }
-
-      if (
-        missing.length &&
-        missing.length <= 8
-      ) {
-        addIssue(
-          'missing-sequence',
-          `番号に欠番があります: ${missing.join(', ')}`,
-          {
-            missing
-          }
-        );
+      if (missing.length && missing.length <= 8) {
+        addIssue('missing-sequence', `番号に欠番があります: ${missing.join(', ')}`, { missing });
       }
     }
 
+    // 一意補完は正常扱い。ユーザー警告には出さず診断ログだけに残す。
     for (const c of cards) {
-      if (
-        c.itemInferred &&
-        Number.isInteger(
-          c.itemNumber
-        )
-      ) {
-        debugLines.push(
-          `${c.itemNumber}: 番号を前後関係から一意に補完`
-        );
+      if (c.itemInferred && Number.isInteger(c.itemNumber)) {
+        debugLines.push(`${c.itemNumber}: 番号を前後関係から一意に補完`);
       }
     }
 
-    warnings =
-      issues.map(
-        i =>
-          i.message
-      );
-
+    // ユーザー向け表示は、最終的に対応が必要な異常だけ。
+    warnings = issues.map(i => i.message);
     return rows;
   }
 
   function renderResults() {
     resultBody.innerHTML = '';
     warnBox.innerHTML = '';
+    resultCount.textContent = `${mergedRows.length}件`;
 
-    resultCount.textContent =
-      `${mergedRows.length}件`;
-
-    for (
-      const [i, row] of
-        mergedRows.entries()
-    ) {
-      const tr =
-        document.createElement(
-          'tr'
-        );
-
-      const values = [
-        row.itemNumber,
-        row.valueA,
-        row.valueB
-      ];
-
-      const keys = [
-        'itemNumber',
-        'valueA',
-        'valueB'
-      ];
-
-      values.forEach(
-        (v, col) => {
-          const td =
-            document.createElement(
-              'td'
-            );
-
-          const input =
-            document.createElement(
-              'input'
-            );
-
-          input.type =
-            'number';
-
-          input.inputMode =
-            'numeric';
-
-          input.min =
-            '0';
-
-          input.step =
-            '1';
-
-          input.className =
-            `num-input${col === 0 ? ' item-id' : ''}${v == null ? ' invalid' : ''}`;
-
-          input.value =
-            v == null
-              ? ''
-              : String(v);
-
-          input.placeholder =
-            '?';
-
-          input.dataset.row =
-            String(i);
-
-          input.dataset.key =
-            keys[col];
-
-          input.addEventListener(
-            'focus',
-            () =>
-              input.select()
-          );
-
-          input.addEventListener(
-            'input',
-            onResultEdit
-          );
-
-          td.append(input);
-          tr.append(td);
-        }
-      );
-
+    for (const [i, row] of mergedRows.entries()) {
+      const tr = document.createElement('tr');
+      const values = [row.itemNumber, row.valueA, row.valueB];
+      const keys = ['itemNumber', 'valueA', 'valueB'];
+      values.forEach((v, col) => {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.inputMode = 'numeric';
+        input.min = '0';
+        input.step = '1';
+        input.className = `num-input${col === 0 ? ' item-id' : ''}${v == null ? ' invalid' : ''}`;
+        input.value = v == null ? '' : String(v);
+        input.placeholder = '?';
+        input.dataset.row = String(i);
+        input.dataset.key = keys[col];
+        input.addEventListener('focus', () => input.select());
+        input.addEventListener('input', onResultEdit);
+        td.append(input);
+        tr.append(td);
+      });
       resultBody.append(tr);
     }
 
-    const uniqueWarnings =
-      [
-        ...new Set(
-          warnings
-        )
-      ];
-
-    for (
-      const w of
-        uniqueWarnings
-    ) {
-      const div =
-        document.createElement(
-          'div'
-        );
-
-      div.className =
-        'warning';
-
-      div.textContent =
-        w;
-
+    const uniqueWarnings = [...new Set(warnings)];
+    if (sourceNameWarning) uniqueWarnings.push(sourceNameWarning);
+    for (const w of uniqueWarnings) {
+      const div = document.createElement('div');
+      div.className = 'warning';
+      div.textContent = w;
       warnBox.append(div);
     }
-
+    sourceNameText.textContent = sourceName || '未認識';
+    sourceNameBox.hidden = !sourceName;
     updateTsv();
-
-    debugText.textContent =
-      debugLines.join('\n');
-
-    resultsCard.hidden =
-      false;
+    debugText.textContent = debugLines.join('\n');
+    resultsCard.hidden = false;
   }
 
   function onResultEdit(e) {
-    const input =
-      e.currentTarget;
-
-    const row =
-      mergedRows[
-        Number(
-          input.dataset.row
-        )
-      ];
-
-    const key =
-      input.dataset.key;
-
-    const ds =
-      digitsOnly(
-        input.value
-      );
-
-    row[key] =
-      ds
-        ? Number(ds)
-        : null;
-
-    input.classList.toggle(
-      'invalid',
-      row[key] == null
-    );
-
+    const input = e.currentTarget;
+    const row = mergedRows[Number(input.dataset.row)];
+    const key = input.dataset.key;
+    const ds = digitsOnly(input.value);
+    row[key] = ds ? Number(ds) : null;
+    input.classList.toggle('invalid', row[key] == null);
     updateTsv();
   }
 
   function rowsAreComplete() {
-    return (
-      mergedRows.length >
-        0 &&
-      mergedRows.every(
-        r =>
-          Number.isInteger(
-            r.itemNumber
-          ) &&
-          Number.isInteger(
-            r.valueA
-          ) &&
-          Number.isInteger(
-            r.valueB
-          )
-      )
+    return mergedRows.length > 0 && mergedRows.every(r =>
+      Number.isInteger(r.itemNumber) &&
+      Number.isInteger(r.valueA) &&
+      Number.isInteger(r.valueB)
     );
   }
 
   function hasReadingIssue() {
-    return (
-      issues.length > 0 ||
-      !rowsAreComplete()
-    );
+    return issues.length > 0 || !rowsAreComplete();
   }
 
   function buildDiagnosticText() {
     const lines = [];
-
-    lines.push(
-      'PAC Reader 診断'
-    );
-
-    lines.push(
-      `version: ${APP_VERSION}`
-    );
-
-    lines.push(
-      `状態: ${
-        hasReadingIssue()
-          ? '読み取り異常'
-          : '正常'
-      }`
-    );
-
-    lines.push(
-      `画像数: ${selectedFiles.length}`
-    );
-
-    lines.push(
-      `最終件数: ${mergedRows.length}`
-    );
-
+    lines.push('PAC Reader 診断');
+    lines.push(`version: ${APP_VERSION}`);
+    lines.push(`状態: ${hasReadingIssue() ? '読み取り異常' : '正常'}`);
+    lines.push(`画像数: ${selectedFiles.length}`);
+    lines.push(`最終件数: ${mergedRows.length}`);
+    lines.push(`認識名: ${sourceName || '未認識'}`);
+    if (sourceNameFile) lines.push(`認識名画像: ${sourceNameFile}`);
+    lines.push(`スプレッドシート用: ${sourceName && rowsAreComplete() && !hasReadingIssue() ? '利用可' : '利用不可'}`);
     lines.push('');
-
-    lines.push(
-      '--- 入力画像 ---'
-    );
-
-    for (
-      const f of
-        selectedFiles
-    ) {
-      lines.push(
-        `${f.name}\t${fmtBytes(f.size)}`
-      );
+    lines.push('--- 入力画像 ---');
+    for (const f of selectedFiles) {
+      lines.push(`${f.name}\t${fmtBytes(f.size)}`);
     }
-
     lines.push('');
-
-    lines.push(
-      '--- 異常 ---'
-    );
-
-    if (
-      issues.length
-    ) {
-      for (
-        const issue of
-          issues
-      ) {
-        lines.push(
-          `- ${issue.message}`
-        );
-      }
-    } else if (
-      !rowsAreComplete()
-    ) {
-      lines.push(
-        '- 未確定の項目があります。'
-      );
+    lines.push('--- 異常 ---');
+    if (issues.length) {
+      for (const issue of issues) lines.push(`- ${issue.message}`);
+    } else if (!rowsAreComplete()) {
+      lines.push('- 未確定の項目があります。');
     } else {
-      lines.push(
-        'なし'
-      );
+      lines.push('なし');
     }
-
     lines.push('');
-
-    lines.push(
-      '--- 解析結果 ---'
-    );
-
-    lines.push(
-      '番号\t値A\t値B'
-    );
-
-    for (
-      const row of
-        mergedRows
-    ) {
-      lines.push(
-        `${row.itemNumber ?? '?'}\t${row.valueA ?? '?'}\t${row.valueB ?? '?'}`
-      );
+    lines.push('--- 解析結果 ---');
+    lines.push('番号\t値A\t値B');
+    for (const row of mergedRows) {
+      lines.push(`${row.itemNumber ?? '?'}\t${row.valueA ?? '?'}\t${row.valueB ?? '?'}`);
     }
-
     lines.push('');
-
-    lines.push(
-      '--- 診断ログ ---'
-    );
-
-    lines.push(
-      ...debugLines
-    );
-
-    return lines.join(
-      '\n'
-    );
+    lines.push('--- 診断ログ ---');
+    lines.push(...debugLines);
+    return lines.join('\n');
   }
 
   function updateTsv() {
-    const complete =
-      rowsAreComplete();
+    const complete = rowsAreComplete();
+    const abnormal = hasReadingIssue();
+    const sorted = [...mergedRows]
+      .filter(r => Number.isInteger(r.itemNumber))
+      .sort((a, b) => a.itemNumber - b.itemNumber);
 
-    const abnormal =
-      hasReadingIssue();
+    tsvPreview.value = sorted
+      .map(r => `${r.valueA ?? ''}\t${r.valueB ?? ''}`)
+      .join('\n');
 
-    const sorted =
-      [
-        ...mergedRows
-      ]
-        .filter(
-          r =>
-            Number.isInteger(
-              r.itemNumber
-            )
-        )
-        .sort(
-          (a, b) =>
-            a.itemNumber -
-            b.itemNumber
-        );
+    sheetTsvPreview.value = sourceName
+      ? [sourceName, ...sorted.map(r => `${r.itemNumber ?? ''}\t${r.valueA ?? ''}\t${r.valueB ?? ''}`)].join('\n')
+      : sorted.map(r => `${r.itemNumber ?? ''}\t${r.valueA ?? ''}\t${r.valueB ?? ''}`).join('\n');
 
-    tsvPreview.value =
-      sorted
-        .map(
-          r =>
-            `${r.valueA ?? ''}\t${r.valueB ?? ''}`
-        )
-        .join('\n');
+    copyBtn.classList.remove('done');
+    copyBtn.disabled = !complete || !sorted.length || abnormal;
+    copyBtn.textContent = '結果をコピー';
 
-    copyBtn.classList.remove(
-      'done'
-    );
+    sheetCopyBtn.classList.remove('done');
+    sheetCopyBtn.classList.add('sheet');
+    sheetCopyBtn.disabled = !sourceName || !complete || !sorted.length || abnormal;
+    sheetCopyBtn.textContent = 'スプレッドシート用コピー';
 
-    copyBtn.disabled =
-      !complete ||
-      !sorted.length ||
-      abnormal;
-
-    copyBtn.textContent =
-      '結果をコピー';
-
-    diagnosticCopyBtn.classList.remove(
-      'done'
-    );
-
-    diagnosticCopyBtn.classList.add(
-      'diagnostic'
-    );
-
-    diagnosticCopyBtn.disabled =
-      false;
-
-    diagnosticCopyBtn.textContent =
-      '診断情報をコピー';
+    diagnosticCopyBtn.classList.remove('done');
+    diagnosticCopyBtn.classList.add('diagnostic');
+    diagnosticCopyBtn.disabled = false;
+    diagnosticCopyBtn.textContent = '診断情報をコピー';
   }
 
   async function copyText(text) {
-    if (
-      navigator.clipboard
-        ?.writeText
-    ) {
-      await navigator.clipboard.writeText(
-        text
-      );
-
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
       return;
     }
-
-    const ta =
-      document.createElement(
-        'textarea'
-      );
-
+    const ta = document.createElement('textarea');
     ta.value = text;
-
-    ta.style.position =
-      'fixed';
-
-    ta.style.opacity =
-      '0';
-
-    document.body.append(
-      ta
-    );
-
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.append(ta);
     ta.select();
-
-    const ok =
-      document.execCommand(
-        'copy'
-      );
-
+    const ok = document.execCommand('copy');
     ta.remove();
-
-    if (!ok) {
-      throw new Error(
-        'コピーできませんでした'
-      );
-    }
+    if (!ok) throw new Error('コピーできませんでした');
   }
 
-  copyBtn.addEventListener(
-    'click',
-    async () => {
-      try {
-        await copyText(
-          tsvPreview.value
-        );
-
-        copyBtn.classList.add(
-          'done'
-        );
-
-        copyBtn.textContent =
-          'コピーしました';
-
-        setTimeout(
-          () => {
-            copyBtn.classList.remove(
-              'done'
-            );
-
-            updateTsv();
-          },
-          1400
-        );
-      } catch (err) {
-        alert(
-          `コピーに失敗しました: ${err.message}`
-        );
-      }
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await copyText(tsvPreview.value);
+      copyBtn.classList.add('done');
+      copyBtn.textContent = 'コピーしました';
+      setTimeout(() => {
+        copyBtn.classList.remove('done');
+        updateTsv();
+      }, 1400);
+    } catch (err) {
+      alert(`コピーに失敗しました: ${err.message}`);
     }
-  );
+  });
 
-  diagnosticCopyBtn.addEventListener(
-    'click',
-    async () => {
-      try {
-        await copyText(
-          buildDiagnosticText()
-        );
-
-        diagnosticCopyBtn.classList.remove(
-          'diagnostic'
-        );
-
-        diagnosticCopyBtn.classList.add(
-          'done'
-        );
-
-        diagnosticCopyBtn.textContent =
-          '診断情報をコピーしました';
-
-        setTimeout(
-          () => {
-            diagnosticCopyBtn.classList.remove(
-              'done'
-            );
-
-            diagnosticCopyBtn.classList.add(
-              'diagnostic'
-            );
-
-            diagnosticCopyBtn.textContent =
-              '診断情報をコピー';
-          },
-          1400
-        );
-      } catch (err) {
-        alert(
-          `コピーに失敗しました: ${err.message}`
-        );
-      }
+  sheetCopyBtn.addEventListener('click', async () => {
+    try {
+      await copyText(sheetTsvPreview.value);
+      sheetCopyBtn.classList.remove('sheet');
+      sheetCopyBtn.classList.add('done');
+      sheetCopyBtn.textContent = 'コピーしました';
+      setTimeout(() => {
+        sheetCopyBtn.classList.remove('done');
+        sheetCopyBtn.classList.add('sheet');
+        updateTsv();
+      }, 1400);
+    } catch (err) {
+      alert(`コピーに失敗しました: ${err.message}`);
     }
-  );
+  });
 
-  analyzeBtn.addEventListener(
-    'click',
-    async () => {
-      if (
-        busy ||
-        !selectedFiles.length
-      ) {
-        return;
+  diagnosticCopyBtn.addEventListener('click', async () => {
+    try {
+      await copyText(buildDiagnosticText());
+      diagnosticCopyBtn.classList.remove('diagnostic');
+      diagnosticCopyBtn.classList.add('done');
+      diagnosticCopyBtn.textContent = '診断情報をコピーしました';
+      setTimeout(() => {
+        diagnosticCopyBtn.classList.remove('done');
+        diagnosticCopyBtn.classList.add('diagnostic');
+        diagnosticCopyBtn.textContent = '診断情報をコピー';
+      }, 1400);
+    } catch (err) {
+      alert(`コピーに失敗しました: ${err.message}`);
+    }
+  });
+
+
+  analyzeBtn.addEventListener('click', async () => {
+    if (busy || !selectedFiles.length) return;
+    busy = true;
+    analyzeBtn.disabled = true;
+    resultsCard.hidden = true;
+    warnings = [];
+    issues = [];
+    debugLines = [];
+    mergedRows = [];
+    sourceName = '';
+    sourceNameRaw = '';
+    sourceNameFile = '';
+    sourceNameConfidence = null;
+    sourceNameWarning = '';
+    const started = performance.now();
+    let worker = null;
+    let nameWorker = null;
+
+    try {
+      setStatus('画像を解析中…', '読み取り領域を検出しています', 4);
+      const frames = [];
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const frame = await loadImageFile(selectedFiles[i]);
+        frames.push(frame);
+        setStatus('画像を解析中…', `${i + 1} / ${selectedFiles.length}枚`, 4 + 12 * (i + 1) / selectedFiles.length);
+        await new Promise(requestAnimationFrame);
       }
 
-      busy = true;
+      const allCards = [];
+      frames.forEach((frame, i) => allCards.push(...prepareFrame(frame, i)));
+      if (!allCards.length) throw new Error('読み取り領域を検出できませんでした。対応レイアウトの画像か確認してください。');
+      debugLines.push(`検出項目合計: ${allCards.length}`);
 
-      analyzeBtn.disabled =
-        true;
-
-      resultsCard.hidden =
-        true;
-
-      warnings = [];
-      issues = [];
-      debugLines = [];
-      mergedRows = [];
-
-      const started =
-        performance.now();
-
-      let worker = null;
+      if (!window.Tesseract) throw new Error('Tesseract.jsを読み込めませんでした。通信状態を確認してください。');
 
       try {
-        setStatus(
-          '画像を解析中…',
-          '読み取り領域を検出しています',
-          4
-        );
-
-        const frames = [];
-
-        for (
-          let i = 0;
-          i < selectedFiles.length;
-          i++
-        ) {
-          const frame =
-            await loadImageFile(
-              selectedFiles[i]
-            );
-
-          frames.push(frame);
-
-          setStatus(
-            '画像を解析中…',
-            `${i + 1} / ${selectedFiles.length}枚`,
-            4 +
-              12 *
-              (i + 1) /
-              selectedFiles.length
-          );
-
-          await new Promise(
-            requestAnimationFrame
-          );
-        }
-
-        const allCards = [];
-
-        frames.forEach(
-          (frame, i) =>
-            allCards.push(
-              ...prepareFrame(
-                frame,
-                i
-              )
-            )
-        );
-
-        if (
-          !allCards.length
-        ) {
-          throw new Error(
-            '読み取り領域を検出できませんでした。対応レイアウトの画像か確認してください。'
-          );
-        }
-
-        debugLines.push(
-          `検出項目合計: ${allCards.length}`
-        );
-
-        if (
-          !window.Tesseract
-        ) {
-          throw new Error(
-            'Tesseract.jsを読み込めませんでした。通信状態を確認してください。'
-          );
-        }
-
-        setStatus(
-          'OCRを準備中…',
-          '初回は認識データの取得に少し時間がかかります',
-          18
-        );
-
-        worker =
-          await Tesseract.createWorker(
-            'eng',
-            Tesseract.OEM
-              ?.LSTM_ONLY ??
-              1,
-            {
-              logger: (m) => {
-                if (
-                  m?.status &&
-                  typeof m.progress ===
-                    'number'
-                ) {
-                  statusSub.textContent =
-                    `${m.status} ${Math.round(m.progress * 100)}%`;
-                }
-              }
+        setStatus('名称OCRを準備中…', '初回は日本語認識データを取得します', 15);
+        nameWorker = await Tesseract.createWorker('jpn', Tesseract.OEM?.LSTM_ONLY ?? 1, {
+          logger: (m) => {
+            if (m?.status && typeof m.progress === 'number') {
+              statusSub.textContent = `${m.status} ${Math.round(m.progress * 100)}%`;
             }
-          );
-
-        await worker.setParameters({
-          tessedit_char_whitelist:
-            '0123456789',
-          tessedit_pageseg_mode:
-            Tesseract.PSM
-              ?.SINGLE_WORD ??
-            '8',
-          user_defined_dpi:
-            '300'
-        });
-
-        let done = 0;
-
-        const totalJobs =
-          allCards.length * 3;
-
-        const progress =
-          (phase) => {
-            const pct =
-              22 +
-              74 *
-              (
-                done /
-                Math.max(
-                  1,
-                  totalJobs
-                )
-              );
-
-            setStatus(
-              phase,
-              `${done} / ${totalJobs}項目`,
-              pct
-            );
-          };
-
-        for (
-          const card of
-            allCards
-        ) {
-          progress(
-            '番号を認識中…'
-          );
-
-          await recognizeItemNumber(
-            worker,
-            card
-          );
-
-          done++;
-
-          await new Promise(
-            requestAnimationFrame
-          );
-        }
-
-        inferMissingItemNumbers(
-          allCards
-        );
-
-        await worker.setParameters({
-          tessedit_pageseg_mode:
-            Tesseract.PSM
-              ?.SINGLE_WORD ??
-            '8'
-        });
-
-        for (
-          const card of
-            allCards
-        ) {
-          progress(
-            '値Aを認識中…'
-          );
-
-          if (
-            card.valueABox
-          ) {
-            const r =
-              await recognizeCanvas(
-                worker,
-                makeCropCanvas(
-                  card.frame,
-                  card.valueABox,
-                  4
-                )
-              );
-
-            card.valueA =
-              r.value;
-
-            card.valueAConfidence =
-              r.confidence;
           }
-
-          done++;
-
-          await new Promise(
-            requestAnimationFrame
-          );
-        }
-
-        for (
-          const card of
-            allCards
-        ) {
-          progress(
-            '値Bを認識中…'
-          );
-
-          if (
-            card.valueBBox
-          ) {
-            const r =
-              await recognizeCanvas(
-                worker,
-                makeCropCanvas(
-                  card.frame,
-                  card.valueBBox,
-                  4
-                )
-              );
-
-            card.valueB =
-              r.value;
-
-            card.valueBConfidence =
-              r.confidence;
-          }
-
-          done++;
-
-          await new Promise(
-            requestAnimationFrame
-          );
-        }
-
-        mergedRows =
-          mergeEntries(
-            allCards
-          );
-
-        const elapsed =
-          (
-            (
-              performance.now() -
-              started
-            ) /
-            1000
-          ).toFixed(1);
-
-        debugLines.push(
-          `処理時間: ${elapsed}s`
-        );
-
-        for (
-          const c of
-            allCards
-        ) {
-          const itemDetail =
-            c.itemInferred
-              ? 'sequence'
-              : `${c.itemMethod ?? 'unknown'}${c.itemConfidence == null ? '' : ` (${Math.round(c.itemConfidence)})`}`;
-
-          const attempts =
-            c.itemAttempts.length
-              ? ` | attempts=${c.itemAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
-              : '';
-
-          const errorDetail =
-            c.errors.length
-              ? ` | errors=${c.errors.join(' / ')}`
-              : '';
-
-          debugLines.push(
-            `${c.fileName} | ${c.itemNumber ?? '?'} [${itemDetail}] | valueA=${c.valueA ?? '?'} (${Math.round(c.valueAConfidence ?? 0)}) | valueB=${c.valueB ?? '?'} (${Math.round(c.valueBConfidence ?? 0)}) | ${c.kind} | ${c.captureState}${attempts}${errorDetail}`
-          );
-        }
-
-        setStatus(
-          '完了',
-          `${mergedRows.length}件 / ${elapsed}秒`,
-          100
-        );
-
-        renderResults();
-
-        resultsCard.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
         });
-      } catch (err) {
-        console.error(err);
-
-        const message =
-          err?.message ||
-          String(err);
-
-        setStatus(
-          'エラー',
-          message,
-          100
-        );
-
-        debugLines.push(
-          `fatal: ${message}`
-        );
-
-        addIssue(
-          'fatal',
-          message
-        );
-
-        warnings =
-          issues.map(
-            i =>
-              i.message
-          );
-
-        renderResults();
+        setStatus('名称を認識中…', `${frames.length}枚から確認しています`, 17);
+        await recognizeSourceName(nameWorker, frames);
+      } catch (nameErr) {
+        sourceNameWarning = '名称OCRを完了できなかったため、スプレッドシート用コピーは利用できません。';
+        debugLines.push(`名称OCR error: ${nameErr?.message || String(nameErr)}`);
       } finally {
-        if (worker) {
-          try {
-            await worker.terminate();
-          } catch (_) {
+        if (nameWorker) {
+          try { await nameWorker.terminate(); } catch (_) {}
+          nameWorker = null;
+        }
+      }
+
+      setStatus('OCRを準備中…', '数字認識データを準備しています', 18);
+      worker = await Tesseract.createWorker('eng', Tesseract.OEM?.LSTM_ONLY ?? 1, {
+        logger: (m) => {
+          if (m?.status && typeof m.progress === 'number') {
+            statusSub.textContent = `${m.status} ${Math.round(m.progress * 100)}%`;
           }
         }
+      });
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789',
+        tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8',
+        user_defined_dpi: '300'
+      });
 
-        busy = false;
+      let done = 0;
+      const totalJobs = allCards.length * 3;
+      const progress = (phase) => {
+        const pct = 22 + 74 * (done / Math.max(1, totalJobs));
+        setStatus(phase, `${done} / ${totalJobs}項目`, pct);
+      };
 
-        renderFiles();
+      // 番号はタイトル帯から数字3桁だけを抽出し、白背景・黒数字へ二値化して認識する。
+      for (const card of allCards) {
+        progress('番号を認識中…');
+        await recognizeItemNumber(worker, card);
+        done++;
+        await new Promise(requestAnimationFrame);
       }
+
+      // OCRが残した空欄だけを対象に、前後から一意に決まる連番を補完する。
+      inferMissingItemNumbers(allCards);
+
+      await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+      for (const card of allCards) {
+        progress('値Aを認識中…');
+        if (card.valueABox) {
+          const r = await recognizeCanvas(worker, makeCropCanvas(card.frame, card.valueABox, 4));
+          card.valueA = r.value;
+          card.valueAConfidence = r.confidence;
+        }
+        done++;
+        await new Promise(requestAnimationFrame);
+      }
+      for (const card of allCards) {
+        progress('値Bを認識中…');
+        if (card.valueBBox) {
+          const r = await recognizeCanvas(worker, makeCropCanvas(card.frame, card.valueBBox, 4));
+          card.valueB = r.value;
+          card.valueBConfidence = r.confidence;
+        }
+        done++;
+        await new Promise(requestAnimationFrame);
+      }
+
+      mergedRows = mergeEntries(allCards);
+      const elapsed = ((performance.now() - started) / 1000).toFixed(1);
+      debugLines.push(`処理時間: ${elapsed}s`);
+      for (const c of allCards) {
+        const itemDetail = c.itemInferred
+          ? 'sequence'
+          : `${c.itemMethod ?? 'unknown'}${c.itemConfidence == null ? '' : ` (${Math.round(c.itemConfidence)})`}`;
+        const attempts = c.itemAttempts.length
+          ? ` | attempts=${c.itemAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
+          : '';
+        const errorDetail = c.errors.length ? ` | errors=${c.errors.join(' / ')}` : '';
+        debugLines.push(`${c.fileName} | ${c.itemNumber ?? '?'} [${itemDetail}] | valueA=${c.valueA ?? '?'} (${Math.round(c.valueAConfidence ?? 0)}) | valueB=${c.valueB ?? '?'} (${Math.round(c.valueBConfidence ?? 0)}) | ${c.kind} | ${c.captureState}${attempts}${errorDetail}`);
+      }
+      setStatus('完了', `${mergedRows.length}件 / ${elapsed}秒`, 100);
+      renderResults();
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      console.error(err);
+      const message = err?.message || String(err);
+      setStatus('エラー', message, 100);
+      debugLines.push(`fatal: ${message}`);
+      addIssue('fatal', message);
+      warnings = issues.map(i => i.message);
+      renderResults();
+    } finally {
+      if (nameWorker) {
+        try { await nameWorker.terminate(); } catch (_) {}
+      }
+      if (worker) {
+        try { await worker.terminate(); } catch (_) {}
+      }
+      busy = false;
+      renderFiles();
     }
-  );
+  });
 })();
 </script>
 </body>
