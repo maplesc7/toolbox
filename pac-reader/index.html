@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="color-scheme" content="dark">
+  <title>PAC Reader</title>
+  <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
+  <meta name="application-name" content="PAC Reader">
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0d10;
+      --panel: #14181d;
+      --panel2: #1b2027;
+      --border: #2b333d;
+      --text: #f3f5f7;
+      --muted: #9ca8b5;
+      --accent: #5aa9ff;
+      --accent-strong: #2f8fff;
+      --ok: #45c486;
+      --warn: #f6bd60;
+      --bad: #ff6b6b;
+      --shadow: 0 12px 34px rgba(0,0,0,.28);
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 0 0 calc(24px + env(safe-area-inset-bottom));
+    }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    .wrap {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: calc(18px + env(safe-area-inset-top)) 14px 40px;
+    }
+    header { margin: 4px 2px 20px; }
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 7vw, 34px);
+      letter-spacing: -.03em;
+    }
+    .lead {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #dce3ea;
+    }
+    .privacy {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      background: #101923;
+      border: 1px solid #22384d;
+      border-radius: 12px;
+      padding: 11px 12px;
+      margin-bottom: 14px;
+      color: #b9c9d8;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .privacy .dot {
+      flex: 0 0 auto;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--ok);
+      margin-top: 5px;
+    }
+    .file-pick {
+      display: block;
+      position: relative;
+      width: 100%;
+    }
+    .file-pick input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .pick-face, .primary, .secondary, .copy-btn {
+      min-height: 52px;
+      border-radius: 13px;
+      border: 1px solid transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 750;
+      user-select: none;
+    }
+    .pick-face {
+      background: var(--panel2);
+      border-color: #394451;
+      color: var(--text);
+    }
+    .file-pick:active .pick-face { transform: translateY(1px); }
+    .file-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .file-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      padding: 10px 12px;
+      border-radius: 11px;
+      background: #101318;
+      border: 1px solid #232a32;
+      font-size: 13px;
+    }
+    .file-name {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .file-size { color: var(--muted); white-space: nowrap; }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .primary, .secondary, .copy-btn {
+      width: 100%;
+      cursor: pointer;
+    }
+    .primary, .copy-btn {
+      border: 0;
+      background: var(--accent-strong);
+      color: #fff;
+    }
+    .primary:disabled, .copy-btn:disabled {
+      opacity: .42;
+      cursor: default;
+    }
+    .secondary {
+      background: transparent;
+      border-color: #36414d;
+      color: #c9d1d9;
+    }
+    .status-card[hidden], .results-card[hidden] { display: none; }
+    .status-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    #statusText { font-weight: 700; }
+    #statusSub { color: var(--muted); font-size: 12px; }
+    .progress {
+      height: 9px;
+      border-radius: 999px;
+      background: #262d35;
+      overflow: hidden;
+    }
+    .progress > div {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--accent);
+      transition: width .18s ease;
+    }
+    .summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .summary strong { font-size: 20px; }
+    .summary small { color: var(--muted); }
+    .warn-box {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    .warning, .error-note {
+      border-radius: 11px;
+      padding: 10px 11px;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .warning {
+      background: #261f12;
+      border: 1px solid #5c4822;
+      color: #f6d596;
+    }
+    .error-note {
+      background: #281516;
+      border: 1px solid #633033;
+      color: #ffb7b7;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #0f1216;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 390px;
+      font-variant-numeric: tabular-nums;
+    }
+    th, td {
+      padding: 8px;
+      border-bottom: 1px solid #252c34;
+      text-align: right;
+    }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #171c22;
+      color: #aeb8c3;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    tr:last-child td { border-bottom: 0; }
+    td:first-child, th:first-child { text-align: center; width: 30%; }
+    .num-input {
+      width: 100%;
+      min-width: 70px;
+      height: 42px;
+      border-radius: 9px;
+      border: 1px solid #343e49;
+      background: #161b21;
+      color: #f8fafc;
+      text-align: right;
+      padding: 0 10px;
+      font-size: 17px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+    }
+    .num-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(90,169,255,.15);
+    }
+    .num-input.item-id { text-align: center; }
+    .num-input.invalid { border-color: var(--bad); }
+    .copy-dock {
+      position: sticky;
+      bottom: calc(10px + env(safe-area-inset-bottom));
+      margin-top: 14px;
+      padding-top: 8px;
+      background: linear-gradient(to bottom, rgba(20,24,29,0), var(--panel) 28%);
+    }
+    .copy-btn { box-shadow: 0 8px 24px rgba(47,143,255,.28); }
+    .copy-btn.done { background: #238657; }
+    .tsv-preview {
+      width: 100%;
+      min-height: 116px;
+      margin-top: 12px;
+      resize: vertical;
+      border-radius: 10px;
+      border: 1px solid #2e3741;
+      background: #0c0f13;
+      color: #d9e1e8;
+      padding: 10px;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    details {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    details summary { cursor: pointer; padding: 6px 0; }
+    #debugText {
+      margin: 8px 0 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font: 11px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    .footer-note {
+      margin: 18px 3px 0;
+      color: #707b86;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    @media (min-width: 620px) {
+      .actions { grid-template-columns: 1fr auto; }
+      .secondary { width: auto; padding: 0 20px; }
+      .card { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>PAC Reader</h1>
+      <p class="lead">画像内の番号と数値項目を読み取り、整形してコピーします。</p>
+    </header>
+
+    <section class="card">
+      <div class="privacy"><span class="dot"></span><span>選択した画像はアップロードせず、読み取り処理はSafari内で行います。初回のみOCRライブラリと認識データをCDNから読み込みます。</span></div>
+      <h2 class="section-title">1. 画像を選択</h2>
+      <label class="file-pick">
+        <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/*" multiple>
+        <span class="pick-face">＋ 画像を選択</span>
+      </label>
+      <div id="fileList" class="file-list"></div>
+      <div class="actions">
+        <button id="analyzeBtn" class="primary" type="button" disabled>画像を読み取る</button>
+        <button id="resetBtn" class="secondary" type="button">リセット</button>
+      </div>
+    </section>
+
+    <section id="statusCard" class="card status-card" hidden aria-live="polite">
+      <div class="status-head">
+        <span id="statusText">準備中…</span>
+        <span id="statusSub"></span>
+      </div>
+      <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
+    </section>
+
+    <section id="resultsCard" class="card results-card" hidden>
+      <div class="summary">
+        <div><strong id="resultCount">0件</strong><br><small>認識結果を確認してください</small></div>
+      </div>
+      <div id="warnBox" class="warn-box"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>番号</th><th>値A</th><th>値B</th></tr></thead>
+          <tbody id="resultBody"></tbody>
+        </table>
+      </div>
+      <textarea id="tsvPreview" class="tsv-preview" readonly spellcheck="false" aria-label="整形結果プレビュー"></textarea>
+      <div class="copy-dock"><button id="copyBtn" class="copy-btn" type="button">結果をコピー</button></div>
+      <details>
+        <summary>診断情報</summary>
+        <pre id="debugText"></pre>
+      </details>
+    </section>
+
+    <p class="footer-note">プロトタイプ。画像レイアウトが大きく変わった場合は読み取りロジックの調整が必要です。</p>
+  </main>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = (s) => document.querySelector(s);
+  const fileInput = $('#fileInput');
+  const fileList = $('#fileList');
+  const analyzeBtn = $('#analyzeBtn');
+  const resetBtn = $('#resetBtn');
+  const statusCard = $('#statusCard');
+  const statusText = $('#statusText');
+  const statusSub = $('#statusSub');
+  const progressBar = $('#progressBar');
+  const resultsCard = $('#resultsCard');
+  const resultCount = $('#resultCount');
+  const resultBody = $('#resultBody');
+  const warnBox = $('#warnBox');
+  const tsvPreview = $('#tsvPreview');
+  const copyBtn = $('#copyBtn');
+  const debugText = $('#debugText');
+
+  let selectedFiles = [];
+  let mergedRows = [];
+  let warnings = [];
+  let debugLines = [];
+  let busy = false;
+
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
+  const fmtBytes = (n) => n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
+
+  function setStatus(main, sub = '', pct = null) {
+    statusCard.hidden = false;
+    statusText.textContent = main;
+    statusSub.textContent = sub;
+    if (pct == null) {
+      progressBar.style.width = '8%';
+    } else {
+      progressBar.style.width = `${clamp(pct, 0, 100)}%`;
+    }
+  }
+
+  function renderFiles() {
+    fileList.innerHTML = '';
+    for (const f of selectedFiles) {
+      const row = document.createElement('div');
+      row.className = 'file-row';
+      const name = document.createElement('span');
+      name.className = 'file-name';
+      name.textContent = f.name;
+      const size = document.createElement('span');
+      size.className = 'file-size';
+      size.textContent = fmtBytes(f.size);
+      row.append(name, size);
+      fileList.append(row);
+    }
+    analyzeBtn.disabled = busy || selectedFiles.length === 0;
+  }
+
+  fileInput.addEventListener('change', () => {
+    selectedFiles = Array.from(fileInput.files || []);
+    renderFiles();
+    resultsCard.hidden = true;
+    statusCard.hidden = true;
+  });
+
+  resetBtn.addEventListener('click', () => {
+    if (busy) return;
+    fileInput.value = '';
+    selectedFiles = [];
+    mergedRows = [];
+    warnings = [];
+    debugLines = [];
+    fileList.innerHTML = '';
+    resultBody.innerHTML = '';
+    warnBox.innerHTML = '';
+    tsvPreview.value = '';
+    statusCard.hidden = true;
+    resultsCard.hidden = true;
+    analyzeBtn.disabled = true;
+    copyBtn.classList.remove('done');
+    copyBtn.textContent = '結果をコピー';
+  });
+
+  async function loadImageFile(file) {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = url;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error(`${file.name} を画像として開けませんでした`));
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true }) || canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      return { file, canvas, ctx, imageData, width: canvas.width, height: canvas.height, scale: canvas.width / 1206 };
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  function rgbAt(frame, x, y) {
+    const i = (y * frame.width + x) * 4;
+    const d = frame.imageData.data;
+    return [d[i], d[i + 1], d[i + 2]];
+  }
+
+  function lumaAt(frame, x, y) {
+    const i = (y * frame.width + x) * 4;
+    const d = frame.imageData.data;
+    return d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114;
+  }
+
+  function fillShortFalseGaps(mask, maxGap) {
+    let i = 0;
+    while (i < mask.length) {
+      if (mask[i]) { i++; continue; }
+      const start = i;
+      while (i < mask.length && !mask[i]) i++;
+      const len = i - start;
+      if (start > 0 && i < mask.length && len <= maxGap) {
+        for (let j = start; j < i; j++) mask[j] = true;
+      }
+    }
+  }
+
+  function findGraySegments(frame, x0, x1) {
+    const stepX = Math.max(2, Math.round(4 * frame.scale));
+    const rowMask = new Uint8Array(frame.height);
+    for (let y = 0; y < frame.height; y++) {
+      let gray = 0, total = 0;
+      for (let x = x0; x < x1; x += stepX) {
+        const [r, g, b] = rgbAt(frame, x, y);
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        const avg = (r + g + b) / 3;
+        if (max - min <= 8 && avg >= 118 && avg <= 178) gray++;
+        total++;
+      }
+      if (total && gray / total >= 0.55) rowMask[y] = 1;
+    }
+
+    const boolMask = Array.from(rowMask, Boolean);
+    fillShortFalseGaps(boolMask, Math.max(1, Math.round(2 * frame.scale)));
+    const minLen = Math.max(28, Math.round((x1 - x0) * 0.06));
+    const segments = [];
+    let start = null;
+    for (let y = 0; y <= boolMask.length; y++) {
+      const on = y < boolMask.length ? boolMask[y] : false;
+      if (on && start == null) start = y;
+      if (!on && start != null) {
+        if (y - start >= minLen) segments.push({ x0, x1, y0: start, y1: y - 1 });
+        start = null;
+      }
+    }
+    return segments;
+  }
+
+  function findTitleDigitBox(frame, seg) {
+    const { x0, x1, y0, y1 } = seg;
+    const w = x1 - x0;
+    const h = y1 - y0 + 1;
+    const colCount = new Uint16Array(w);
+    const minWhiteCount = Math.max(3, Math.round(5 * frame.scale));
+
+    for (let lx = 0; lx < w; lx++) {
+      let count = 0;
+      const x = x0 + lx;
+      for (let y = y0; y <= y1; y++) {
+        if (lumaAt(frame, x, y) > 190) count++;
+      }
+      colCount[lx] = count;
+    }
+
+    const runs = [];
+    let start = null;
+    for (let x = 0; x <= w; x++) {
+      const on = x < w ? colCount[x] > minWhiteCount : false;
+      if (on && start == null) start = x;
+      if (!on && start != null) {
+        if (x - start >= 2) {
+          let peak = 0;
+          for (let k = start; k < x; k++) peak = Math.max(peak, colCount[k]);
+          runs.push({ x0: start, x1: x - 1, width: x - start, peak });
+        }
+        start = null;
+      }
+    }
+
+    const s = frame.scale;
+    const candidates = runs.filter(r =>
+      r.x0 >= 12 * s &&
+      r.width >= 8 * s && r.width <= 40 * s &&
+      r.peak >= 20 * s &&
+      r.x0 < 170 * s
+    );
+
+    for (let i = 0; i + 2 < candidates.length; i++) {
+      const a = candidates[i], b = candidates[i + 1], c = candidates[i + 2];
+      const gap1 = b.x0 - a.x1 - 1;
+      const gap2 = c.x0 - b.x1 - 1;
+      if (a.x0 < 80 * s && gap1 >= 4 * s && gap1 <= 30 * s && gap2 >= 3 * s && gap2 <= 30 * s) {
+        const pad = Math.max(3, Math.round(6 * s));
+        return {
+          x0: Math.max(x0, x0 + a.x0 - pad),
+          y0: y0 + Math.max(1, Math.round(2 * s)),
+          x1: Math.min(x1, x0 + c.x1 + pad + 1),
+          y1: y1 - Math.max(1, Math.round(2 * s)) + 1
+        };
+      }
+    }
+    return null;
+  }
+
+  function clusterRows(left, right, tol) {
+    const all = [...left.map(s => ({...s, side: 'L'})), ...right.map(s => ({...s, side: 'R'}))].sort((a,b) => a.y0 - b.y0);
+    const groups = [];
+    for (const item of all) {
+      const last = groups[groups.length - 1];
+      if (!last || Math.abs(item.y0 - last.meanY) > tol) {
+        groups.push({ items: [item], meanY: item.y0 });
+      } else {
+        last.items.push(item);
+        last.meanY = last.items.reduce((sum, v) => sum + v.y0, 0) / last.items.length;
+      }
+    }
+    return groups.map(g => ({
+      L: g.items.find(v => v.side === 'L') || null,
+      R: g.items.find(v => v.side === 'R') || null,
+      y: g.meanY
+    }));
+  }
+
+  function darkRowFraction(frame, y, x0, x1) {
+    const step = Math.max(2, Math.round(3 * frame.scale));
+    let dark = 0, total = 0;
+    for (let x = x0; x < x1; x += step) {
+      if (lumaAt(frame, x, y) < 80) dark++;
+      total++;
+    }
+    return total ? dark / total : 0;
+  }
+
+  function findBodyBounds(frame, x0, x1, titleEnd) {
+    const maxY = Math.min(frame.height - 1, titleEnd + Math.round((x1 - x0) * 0.5));
+    const groups = [];
+    let start = null;
+    for (let y = titleEnd + 1; y <= maxY + 1; y++) {
+      const on = y <= maxY ? darkRowFraction(frame, y, x0, x1) > 0.88 : false;
+      if (on && start == null) start = y;
+      if (!on && start != null) {
+        groups.push({ y0: start, y1: y - 1 });
+        start = null;
+      }
+    }
+    if (groups.length < 2) return null;
+    return { top: groups[0].y0, bottom: groups[1].y1 };
+  }
+
+  function darkComponents(frame, region, threshold = 110) {
+    const x0 = clamp(Math.floor(region.x0), 0, frame.width - 1);
+    const y0 = clamp(Math.floor(region.y0), 0, frame.height - 1);
+    const x1 = clamp(Math.ceil(region.x1), x0 + 1, frame.width);
+    const y1 = clamp(Math.ceil(region.y1), y0 + 1, frame.height);
+    const w = x1 - x0, h = y1 - y0;
+    const visited = new Uint8Array(w * h);
+    const comps = [];
+    const stack = [];
+
+    const isDark = (lx, ly) => lumaAt(frame, x0 + lx, y0 + ly) < threshold;
+    for (let sy = 0; sy < h; sy++) {
+      for (let sx = 0; sx < w; sx++) {
+        const seed = sy * w + sx;
+        if (visited[seed]) continue;
+        visited[seed] = 1;
+        if (!isDark(sx, sy)) continue;
+
+        let minX = sx, maxX = sx, minY = sy, maxY = sy, area = 0;
+        stack.length = 0;
+        stack.push(seed);
+        while (stack.length) {
+          const idx = stack.pop();
+          const cy = Math.floor(idx / w), cx = idx - cy * w;
+          area++;
+          if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
+          if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
+
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (!dx && !dy) continue;
+              const nx = cx + dx, ny = cy + dy;
+              if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+              const ni = ny * w + nx;
+              if (visited[ni]) continue;
+              visited[ni] = 1;
+              if (isDark(nx, ny)) stack.push(ni);
+            }
+          }
+        }
+        comps.push({ x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, area });
+      }
+    }
+    return { comps, x0, y0, x1, y1 };
+  }
+
+  function unionComponentBox(frame, region, filter, padPx) {
+    const found = darkComponents(frame, region, 110);
+    const keep = found.comps.filter(filter);
+    if (!keep.length) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const c of keep) {
+      minX = Math.min(minX, c.x); minY = Math.min(minY, c.y);
+      maxX = Math.max(maxX, c.x + c.w - 1); maxY = Math.max(maxY, c.y + c.h - 1);
+    }
+    const p = Math.max(3, Math.round(padPx));
+    return {
+      x0: Math.max(found.x0, found.x0 + minX - p),
+      y0: Math.max(found.y0, found.y0 + minY - p),
+      x1: Math.min(found.x1, found.x0 + maxX + p + 1),
+      y1: Math.min(found.y1, found.y0 + maxY + p + 1)
+    };
+  }
+
+  function findValueABox(frame, card) {
+    const W = card.x1 - card.x0, H = card.bottom - card.top + 1, cellW = W * 0.25;
+    const region = {
+      x0: card.x0 + cellW * 0.12,
+      x1: card.x0 + cellW * 0.92,
+      y0: card.top + H * 0.20,
+      y1: card.top + H * 0.92
+    };
+    const hMin = Math.max(20, H * 0.20);
+    const aMin = Math.max(80, H * 0.65);
+    return unionComponentBox(frame, region, c => c.y >= H * 0.14 && c.h >= hMin && c.area >= aMin, 6 * frame.scale);
+  }
+
+  function findValueBBox(frame, card) {
+    const W = card.x1 - card.x0, H = card.bottom - card.top + 1, cellW = W * 0.25;
+    const region = {
+      x0: card.x0 + 2 * cellW + cellW * 0.08,
+      x1: card.x0 + 3 * cellW - cellW * 0.08,
+      y0: card.top + 2,
+      y1: card.top + H * 0.60
+    };
+    let yMin, hMin, aMin;
+    if (card.kind === 'full') {
+      yMin = H * 0.12; hMin = H * 0.20; aMin = H * 1.50;
+    } else {
+      yMin = H * 0.25; hMin = Math.max(18, H * 0.12); aMin = Math.max(80, H * 0.65);
+    }
+    return unionComponentBox(frame, region, c => c.y >= yMin && c.h >= hMin && c.area >= aMin, 6 * frame.scale);
+  }
+
+  function makeCropCanvas(frame, box, factor = 4) {
+    if (!box) return null;
+    const sx = Math.max(0, Math.floor(box.x0));
+    const sy = Math.max(0, Math.floor(box.y0));
+    const sw = Math.max(1, Math.ceil(box.x1) - sx);
+    const sh = Math.max(1, Math.ceil(box.y1) - sy);
+    const out = document.createElement('canvas');
+    out.width = sw * factor;
+    out.height = sh * factor;
+    const ctx = out.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(frame.canvas, sx, sy, sw, sh, 0, 0, out.width, out.height);
+    return out;
+  }
+
+  function prepareFrame(frame, fileIndex) {
+    const half = Math.floor(frame.width / 2);
+    const left = findGraySegments(frame, 0, half);
+    const right = findGraySegments(frame, half, frame.width);
+    for (const seg of [...left, ...right]) seg.titleBox = findTitleDigitBox(frame, seg);
+
+    const rows = clusterRows(left, right, Math.max(5, 8 * frame.scale));
+    const cards = [];
+    for (const row of rows) {
+      const L = row.L, R = row.R;
+      const hasL = Boolean(L?.titleBox), hasR = Boolean(R?.titleBox);
+      if (!hasL && !hasR) continue;
+
+      const pushCard = (seg, x0, x1, kind, titleEnd) => {
+        const body = findBodyBounds(frame, x0, x1, titleEnd);
+        const card = {
+          frame, fileIndex, fileName: frame.file.name,
+          titleBox: seg.titleBox, itemNumber: null, itemConfidence: null,
+          x0, x1, kind, top: body?.top ?? null, bottom: body?.bottom ?? null,
+          valueABox: null, valueBBox: null, valueA: null, valueB: null,
+          valueAConfidence: null, valueBConfidence: null, errors: []
+        };
+        if (!body) {
+          card.errors.push('読み取り領域の罫線を検出できませんでした');
+        } else {
+          card.valueABox = findValueABox(frame, card);
+          card.valueBBox = findValueBBox(frame, card);
+          if (!card.valueABox) card.errors.push('値Aの領域を検出できませんでした');
+          if (!card.valueBBox) card.errors.push('値Bの領域を検出できませんでした');
+        }
+        cards.push(card);
+      };
+
+      if (hasL && hasR) {
+        pushCard(L, 0, half, 'half', L.y1);
+        pushCard(R, half, frame.width, 'half', R.y1);
+      } else if (hasL) {
+        if (R) pushCard(L, 0, frame.width, 'full', Math.max(L.y1, R.y1));
+        else pushCard(L, 0, half, 'half', L.y1);
+      } else if (hasR) {
+        pushCard(R, half, frame.width, 'half', R.y1);
+      }
+    }
+
+    debugLines.push(`${frame.file.name}: ${frame.width}×${frame.height}, gray L=${left.length}, R=${right.length}, cards=${cards.length}`);
+    return cards;
+  }
+
+  async function recognizeCanvas(worker, canvas) {
+    if (!canvas) return { value: null, confidence: null, raw: '' };
+    const res = await worker.recognize(canvas);
+    const raw = res?.data?.text ?? '';
+    const ds = digitsOnly(raw);
+    return {
+      value: ds ? Number(ds) : null,
+      confidence: Number.isFinite(res?.data?.confidence) ? res.data.confidence : null,
+      raw
+    };
+  }
+
+  function mergeEntries(cards) {
+    const byItemNumber = new Map();
+    const unresolved = [];
+    warnings = [];
+
+    for (const c of cards) {
+      if (!Number.isInteger(c.itemNumber)) {
+        unresolved.push(c);
+        warnings.push(`${c.fileName}: 番号を読み取れない項目があります。結果表で修正してください。`);
+        continue;
+      }
+      const prev = byItemNumber.get(c.itemNumber);
+      if (!prev) {
+        byItemNumber.set(c.itemNumber, c);
+      } else {
+        const same = prev.valueA === c.valueA && prev.valueB === c.valueB;
+        if (!same) {
+          warnings.push(`${c.itemNumber}番のデータが画像間で不一致です（${prev.valueA ?? '?'} / ${prev.valueB ?? '?'} → ${c.valueA ?? '?'} / ${c.valueB ?? '?'}）。後に選択した画像を採用しました。`);
+        }
+        byItemNumber.set(c.itemNumber, c);
+      }
+    }
+
+    const rows = [...byItemNumber.values()].sort((a,b) => a.itemNumber - b.itemNumber);
+    for (const c of unresolved) rows.push(c);
+
+    const itemNumbers = rows.filter(r => Number.isInteger(r.itemNumber)).map(r => r.itemNumber).sort((a,b) => a-b);
+    if (itemNumbers.length >= 2) {
+      const missing = [];
+      for (let n = itemNumbers[0]; n <= itemNumbers[itemNumbers.length - 1]; n++) if (!itemNumbers.includes(n)) missing.push(n);
+      if (missing.length && missing.length <= 8) warnings.push(`番号に欠番があります: ${missing.join(', ')}`);
+    }
+
+    for (const c of rows) {
+      for (const e of c.errors) warnings.push(`${c.itemNumber ?? '?'}番: ${e}`);
+      if (c.valueA == null) warnings.push(`${c.itemNumber ?? '?'}番: 値AをOCRできませんでした。`);
+      if (c.valueB == null) warnings.push(`${c.itemNumber ?? '?'}番: 値BをOCRできませんでした。`);
+    }
+    return rows;
+  }
+
+  function renderResults() {
+    resultBody.innerHTML = '';
+    warnBox.innerHTML = '';
+    resultCount.textContent = `${mergedRows.length}件`;
+
+    for (const [i, row] of mergedRows.entries()) {
+      const tr = document.createElement('tr');
+      const values = [row.itemNumber, row.valueA, row.valueB];
+      const keys = ['itemNumber', 'valueA', 'valueB'];
+      values.forEach((v, col) => {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.inputMode = 'numeric';
+        input.min = '0';
+        input.step = '1';
+        input.className = `num-input${col === 0 ? ' item-id' : ''}${v == null ? ' invalid' : ''}`;
+        input.value = v == null ? '' : String(v);
+        input.placeholder = '?';
+        input.dataset.row = String(i);
+        input.dataset.key = keys[col];
+        input.addEventListener('focus', () => input.select());
+        input.addEventListener('input', onResultEdit);
+        td.append(input);
+        tr.append(td);
+      });
+      resultBody.append(tr);
+    }
+
+    const uniqueWarnings = [...new Set(warnings)];
+    for (const w of uniqueWarnings) {
+      const div = document.createElement('div');
+      div.className = 'warning';
+      div.textContent = w;
+      warnBox.append(div);
+    }
+    updateTsv();
+    debugText.textContent = debugLines.join('\n');
+    resultsCard.hidden = false;
+  }
+
+  function onResultEdit(e) {
+    const input = e.currentTarget;
+    const row = mergedRows[Number(input.dataset.row)];
+    const key = input.dataset.key;
+    const ds = digitsOnly(input.value);
+    row[key] = ds ? Number(ds) : null;
+    input.classList.toggle('invalid', row[key] == null);
+    updateTsv();
+  }
+
+  function updateTsv() {
+    const valid = mergedRows.every(r => Number.isInteger(r.itemNumber) && Number.isInteger(r.valueA) && Number.isInteger(r.valueB));
+    const sorted = [...mergedRows].filter(r => Number.isInteger(r.itemNumber)).sort((a,b) => a.itemNumber - b.itemNumber);
+    tsvPreview.value = sorted.map(r => `${r.valueA ?? ''}\t${r.valueB ?? ''}`).join('\n');
+    copyBtn.disabled = !valid || !sorted.length;
+    copyBtn.classList.remove('done');
+    copyBtn.textContent = valid ? '結果をコピー' : '未確定の項目があります';
+  }
+
+  async function copyText(text) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.append(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    if (!ok) throw new Error('コピーできませんでした');
+  }
+
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await copyText(tsvPreview.value);
+      copyBtn.classList.add('done');
+      copyBtn.textContent = 'コピーしました';
+      setTimeout(() => {
+        copyBtn.classList.remove('done');
+        copyBtn.textContent = '結果をコピー';
+      }, 1400);
+    } catch (err) {
+      alert(`コピーに失敗しました: ${err.message}`);
+    }
+  });
+
+  analyzeBtn.addEventListener('click', async () => {
+    if (busy || !selectedFiles.length) return;
+    busy = true;
+    analyzeBtn.disabled = true;
+    resultsCard.hidden = true;
+    warnings = [];
+    debugLines = [];
+    mergedRows = [];
+    const started = performance.now();
+    let worker = null;
+
+    try {
+      setStatus('画像を解析中…', '読み取り領域を検出しています', 4);
+      const frames = [];
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const frame = await loadImageFile(selectedFiles[i]);
+        frames.push(frame);
+        setStatus('画像を解析中…', `${i + 1} / ${selectedFiles.length}枚`, 4 + 12 * (i + 1) / selectedFiles.length);
+        await new Promise(requestAnimationFrame);
+      }
+
+      const allCards = [];
+      frames.forEach((frame, i) => allCards.push(...prepareFrame(frame, i)));
+      if (!allCards.length) throw new Error('読み取り領域を検出できませんでした。対応レイアウトの画像か確認してください。');
+      debugLines.push(`検出項目合計: ${allCards.length}`);
+
+      if (!window.Tesseract) throw new Error('Tesseract.jsを読み込めませんでした。通信状態を確認してください。');
+      setStatus('OCRを準備中…', '初回は認識データの取得に少し時間がかかります', 18);
+      worker = await Tesseract.createWorker('eng', Tesseract.OEM?.LSTM_ONLY ?? 1, {
+        logger: (m) => {
+          if (m?.status && typeof m.progress === 'number') {
+            statusSub.textContent = `${m.status} ${Math.round(m.progress * 100)}%`;
+          }
+        }
+      });
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789',
+        tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_LINE ?? '7',
+        user_defined_dpi: '300'
+      });
+
+      let done = 0;
+      const totalJobs = allCards.length * 3;
+      const progress = (phase) => {
+        const pct = 22 + 74 * (done / Math.max(1, totalJobs));
+        setStatus(phase, `${done} / ${totalJobs}項目`, pct);
+      };
+
+      // 番号はタイトル帯の数字だけを厳密に切り出して認識する。
+      for (const card of allCards) {
+        progress('番号を認識中…');
+        const crop = makeCropCanvas(card.frame, card.titleBox, 4);
+        const r = await recognizeCanvas(worker, crop);
+        const ds = digitsOnly(r.raw);
+        card.itemNumber = ds.length === 3 ? Number(ds) : null;
+        card.itemConfidence = r.confidence;
+        if (card.itemNumber == null) card.errors.push(`番号OCR失敗（raw=${JSON.stringify(r.raw.trim())}）`);
+        done++;
+        await new Promise(requestAnimationFrame);
+      }
+
+      await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+      for (const card of allCards) {
+        progress('値Aを認識中…');
+        if (card.valueABox) {
+          const r = await recognizeCanvas(worker, makeCropCanvas(card.frame, card.valueABox, 4));
+          card.valueA = r.value;
+          card.valueAConfidence = r.confidence;
+        }
+        done++;
+        await new Promise(requestAnimationFrame);
+      }
+      for (const card of allCards) {
+        progress('値Bを認識中…');
+        if (card.valueBBox) {
+          const r = await recognizeCanvas(worker, makeCropCanvas(card.frame, card.valueBBox, 4));
+          card.valueB = r.value;
+          card.valueBConfidence = r.confidence;
+        }
+        done++;
+        await new Promise(requestAnimationFrame);
+      }
+
+      mergedRows = mergeEntries(allCards);
+      const elapsed = ((performance.now() - started) / 1000).toFixed(1);
+      debugLines.push(`処理時間: ${elapsed}s`);
+      for (const c of allCards) {
+        debugLines.push(`${c.fileName} | ${c.itemNumber ?? '?'} | valueA=${c.valueA ?? '?'} (${Math.round(c.valueAConfidence ?? 0)}) | valueB=${c.valueB ?? '?'} (${Math.round(c.valueBConfidence ?? 0)}) | ${c.kind}`);
+      }
+      setStatus('完了', `${mergedRows.length}件 / ${elapsed}秒`, 100);
+      renderResults();
+      resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      console.error(err);
+      setStatus('エラー', err?.message || String(err), 100);
+      const div = document.createElement('div');
+      div.className = 'error-note';
+      div.textContent = err?.message || String(err);
+      warnBox.innerHTML = '';
+      warnBox.append(div);
+    } finally {
+      if (worker) {
+        try { await worker.terminate(); } catch (_) {}
+      }
+      busy = false;
+      renderFiles();
+    }
+  });
+})();
+</script>
+</body>
+</html>
