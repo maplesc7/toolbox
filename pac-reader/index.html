@@ -375,7 +375,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261008_005500.000</p>
+    <p class="footer-note">ver 20261008_014000.000</p>
   </main>
 
 <script>
@@ -406,7 +406,7 @@
   let issues = [];
   let debugLines = [];
   let busy = false;
-  const APP_VERSION = '20261008_005500.000';
+  const APP_VERSION = '20261008_014000.000';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -646,6 +646,82 @@
     }
     if (groups.length < 2) return null;
     return { top: groups[0].y0, bottom: groups[1].y1 };
+  }
+
+  function verticalDarkFraction(frame, x, y0, y1) {
+    const span = Math.max(1, Math.round(1 * frame.scale));
+    const stepY = Math.max(1, Math.round(2 * frame.scale));
+    let dark = 0;
+    let total = 0;
+
+    for (let xx = Math.max(0, x - span); xx <= Math.min(frame.width - 1, x + span); xx++) {
+      for (let y = y0; y <= y1; y += stepY) {
+        if (lumaAt(frame, xx, y) < 80) dark++;
+        total++;
+      }
+    }
+    return total ? dark / total : 0;
+  }
+
+  function bodyLooksPaired(frame, titleEnd) {
+    /*
+     * 全幅1台の行:
+     *   | 大当り | 確変 | 最終 | 総スタート |
+     * 2台並びの行:
+     *   |大当り|確変|最終|総| 大当り|確変|最終|総|
+     *
+     * したがって、全幅の 1/8, 3/8, 5/8, 7/8 付近に
+     * 縦罫線が立っていれば「2台並び」と判定できる。
+     * タイトル文字のOCR成否ではなく表の罫線構造で判定するため、
+     * 右台の番号検出を一時的に失敗しても左台を全幅誤認しない。
+     */
+    const body = findBodyBounds(frame, 0, frame.width, titleEnd);
+    if (!body) return null;
+
+    const searchRadius = Math.max(16, Math.round(26 * frame.scale));
+    const anchors = [1 / 8, 3 / 8, 5 / 8, 7 / 8];
+    let hits = 0;
+
+    for (const ratio of anchors) {
+      const center = Math.round(frame.width * ratio);
+      let best = 0;
+
+      for (
+        let x = Math.max(0, center - searchRadius);
+        x <= Math.min(frame.width - 1, center + searchRadius);
+        x++
+      ) {
+        best = Math.max(best, verticalDarkFraction(frame, x, body.top, body.bottom));
+        if (best >= 0.82) break;
+      }
+
+      if (best >= 0.82) hits++;
+    }
+
+    if (hits >= 3) return true;
+    if (hits <= 1) return false;
+    return null;
+  }
+
+  function fallbackTitleBox(frame, seg) {
+    const s = frame.scale;
+    return {
+      x0: Math.max(seg.x0, Math.round(seg.x0 + 8 * s)),
+      y0: Math.max(seg.y0, Math.round(seg.y0 + 2 * s)),
+      x1: Math.min(seg.x1, Math.round(seg.x0 + 190 * s)),
+      y1: Math.min(seg.y1 + 1, Math.round(seg.y1 - 1 * s))
+    };
+  }
+
+  function segmentHasThreeTitleDigits(frame, seg) {
+    if (!seg) return false;
+    if (seg.titleBox) return true;
+
+    // 厳密なタイトル枠検出に失敗しても、灰色帯の左側に
+    // 3つの大きな白数字成分があれば「台番号あり」とみなす。
+    // 「戻る」ボタンはこの条件を満たさない。
+    const broad = fallbackTitleBox(frame, seg);
+    return findTitleDigitComponents(frame, broad).length === 3;
   }
 
   function darkComponents(frame, region, threshold = 110) {
@@ -904,24 +980,36 @@
 
     const rows = clusterRows(left, right, Math.max(5, 8 * frame.scale));
     const cards = [];
-    for (const row of rows) {
-      const L = row.L, R = row.R;
-      const hasL = Boolean(L?.titleBox), hasR = Boolean(R?.titleBox);
-      if (!hasL && !hasR) continue;
 
-      const pushCard = (seg, x0, x1, kind, titleEnd) => {
+    for (const row of rows) {
+      const L = row.L;
+      const R = row.R;
+      const hasL = Boolean(L?.titleBox);
+      const hasR = Boolean(R?.titleBox);
+      const numericL = segmentHasThreeTitleDigits(frame, L);
+      const numericR = segmentHasThreeTitleDigits(frame, R);
+
+      if (!numericL && !numericR) continue;
+
+      const rowTitleEnd = Math.max(L?.y1 ?? -1, R?.y1 ?? -1);
+      let paired;
+
+      // まずタイトル帯そのものから2台並びを判定。
+      // 厳密な枠検出が片側だけ失敗しても、3桁数字成分が見えれば2台並び。
+      if (numericL && numericR) {
+        paired = true;
+      } else {
+        // それでも片側しか確認できない場合は、本体の罫線構造で全幅/2台を判定。
+        paired = bodyLooksPaired(frame, rowTitleEnd);
+      }
+
+      const pushCard = (seg, x0, x1, kind, titleEnd, allowTitleFallback = false) => {
+        if (!seg) return;
+
+        const titleBox = seg.titleBox || (allowTitleFallback ? fallbackTitleBox(frame, seg) : null);
+        if (!titleBox) return;
+
         const body = findBodyBounds(frame, x0, x1, titleEnd);
-        const card = {
-          frame, fileIndex, fileName: frame.file.name,
-          sourceOrder: fileIndex * 10000 + cards.length,
-          titleBox: seg.titleBox, itemNumber: null, itemConfidence: null,
-          itemMethod: null, itemRaw: '', itemAttempts: [], itemInferred: false,
-          x0, x1, kind, top: body?.top ?? null, bottom: body?.bottom ?? null,
-          valueABox: null, valueBBox: null, valueA: null, valueB: null,
-          valueAConfidence: null, valueBConfidence: null,
-          captureState: body ? 'complete' : 'partial',
-          errors: []
-        };
         if (!body) {
           // 画面端にタイトル帯しか写っていない候補は採用しない。
           // 次の重なり画像に完全版がある前提で、誤OCRによる幽霊台番を防ぐ。
@@ -929,23 +1017,60 @@
           return;
         }
 
+        const card = {
+          frame, fileIndex, fileName: frame.file.name,
+          sourceOrder: fileIndex * 10000 + cards.length,
+          titleBox, itemNumber: null, itemConfidence: null,
+          itemMethod: null, itemRaw: '', itemAttempts: [], itemInferred: false,
+          x0, x1, kind, top: body.top, bottom: body.bottom,
+          valueABox: null, valueBBox: null, valueA: null, valueB: null,
+          valueAConfidence: null, valueBConfidence: null,
+          captureState: 'complete',
+          errors: []
+        };
+
+        if (!seg.titleBox) {
+          debugLines.push(`${frame.file.name}: タイトル番号領域を罫線構造から補助検出`);
+        }
+
         card.valueABox = findValueABox(frame, card);
         card.valueBBox = findValueBBox(frame, card);
         if (!card.valueABox) card.errors.push('値Aの領域を検出できませんでした');
         if (!card.valueBBox) card.errors.push('値Bの領域を検出できませんでした');
         if (!card.valueABox || !card.valueBBox) card.captureState = 'partial';
+
         cards.push(card);
       };
 
-      if (L && R) {
-        // 左右のタイトル帯が両方見えている行は、必ず左右2枠として扱う。
-        // 片側の番号抽出だけ失敗しても、反対側を全幅カードへ昇格させない。
-        if (hasL) pushCard(L, 0, half, 'half', L.y1);
-        if (hasR) pushCard(R, half, frame.width, 'half', R.y1);
-      } else if (hasL) {
-        pushCard(L, 0, frame.width, 'full', L.y1);
-      } else if (hasR) {
-        pushCard(R, half, frame.width, 'half', R.y1);
+      if (paired === true) {
+        /*
+         * 2台並び。片側のタイトル番号検出だけ失敗していても、
+         * 灰色タイトル帯 + 本体罫線があれば両側を独立した台として扱う。
+         */
+        if (L) pushCard(L, 0, half, 'half', L.y1, true);
+        if (R) pushCard(R, half, frame.width, 'half', R.y1, true);
+      } else if (paired === false) {
+        /*
+         * 全幅1台。228番/270番のように右半分にも灰色帯
+         * （「戻る」ボタンを含む）が存在しても、罫線構造で全幅と判定する。
+         */
+        const seg = numericL ? L : R;
+        pushCard(seg, 0, frame.width, 'full', seg.y1, !seg.titleBox);
+        debugLines.push(`${frame.file.name}: 全幅1台行を検出`);
+      } else {
+        /*
+         * 画面端などで本体罫線だけでは判定不能な場合。
+         * 両側の番号領域が取れているなら2台扱い。
+         * 片側しか取れていなければ、誤って全幅化せずその側だけ半幅扱いにする。
+         */
+        if (numericL && numericR) {
+          pushCard(L, 0, half, 'half', L.y1, !L.titleBox);
+          pushCard(R, half, frame.width, 'half', R.y1, !R.titleBox);
+        } else if (numericL) {
+          pushCard(L, 0, half, 'half', L.y1, !L.titleBox);
+        } else if (numericR) {
+          pushCard(R, half, frame.width, 'half', R.y1, !R.titleBox);
+        }
       }
     }
 
