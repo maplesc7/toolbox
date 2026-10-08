@@ -329,13 +329,13 @@
   <main class="wrap">
     <header>
       <h1>PAC Reader</h1>
-      <p class="lead">複数の画像をまとめて読み取り、番号・値A・値Bの3列に整形してコピーします。店舗や機種が混在していても構いません。</p>
+      <p class="lead">複数の画像をまとめて読み取り、番号・値A・値Bの3列に整形してコピーします。異なる画面の画像が混在していても構いません。</p>
     </header>
 
     <section class="card">
       <div class="privacy"><span class="dot"></span><span>選択した画像はアップロードせず、読み取り処理はSafari内で行います。初回のみOCRライブラリと認識データをCDNから読み込みます。</span></div>
       <h2 class="section-title">1. 画像を選択</h2>
-      <p class="lead" style="margin:0 0 12px">複数店舗・複数機種の画像を一度に選択できます。画像同士は少し重ねて撮影してください。出力は画像内の流れを保ち、重複した同一台は統合します。</p>
+      <p class="lead" style="margin:0 0 12px">異なる画面の画像を一度に選択できます。画像同士は少し重ねて撮影してください。出力は画像内の流れを保ち、重複した同一項目は統合します。</p>
       <label class="file-pick">
         <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/*" multiple>
         <span class="pick-face">＋ 画像を選択</span>
@@ -375,7 +375,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261008_014000.000</p>
+    <p class="footer-note">ver 20261008_014000.001</p>
   </main>
 
 <script>
@@ -406,7 +406,7 @@
   let issues = [];
   let debugLines = [];
   let busy = false;
-  const APP_VERSION = '20261008_014000.000';
+  const APP_VERSION = '20261008_014000.001';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -665,15 +665,15 @@
 
   function bodyLooksPaired(frame, titleEnd) {
     /*
-     * 全幅1台の行:
+     * 全幅1項目の行:
      *   | 大当り | 確変 | 最終 | 総スタート |
-     * 2台並びの行:
+     * 2項目並びの行:
      *   |大当り|確変|最終|総| 大当り|確変|最終|総|
      *
      * したがって、全幅の 1/8, 3/8, 5/8, 7/8 付近に
-     * 縦罫線が立っていれば「2台並び」と判定できる。
+     * 縦罫線が立っていれば「2項目並び」と判定できる。
      * タイトル文字のOCR成否ではなく表の罫線構造で判定するため、
-     * 右台の番号検出を一時的に失敗しても左台を全幅誤認しない。
+     * 右側の番号検出を一時的に失敗しても左側を全幅誤認しない。
      */
     const body = findBodyBounds(frame, 0, frame.width, titleEnd);
     if (!body) return null;
@@ -718,7 +718,7 @@
     if (seg.titleBox) return true;
 
     // 厳密なタイトル枠検出に失敗しても、灰色帯の左側に
-    // 3つの大きな白数字成分があれば「台番号あり」とみなす。
+    // 3つの大きな白数字成分があれば「項目番号あり」とみなす。
     // 「戻る」ボタンはこの条件を満たさない。
     const broad = fallbackTitleBox(frame, seg);
     return findTitleDigitComponents(frame, broad).length === 3;
@@ -994,12 +994,12 @@
       const rowTitleEnd = Math.max(L?.y1 ?? -1, R?.y1 ?? -1);
       let paired;
 
-      // まずタイトル帯そのものから2台並びを判定。
-      // 厳密な枠検出が片側だけ失敗しても、3桁数字成分が見えれば2台並び。
+      // まずタイトル帯そのものから2項目並びを判定。
+      // 厳密な枠検出が片側だけ失敗しても、3桁数字成分が見えれば2項目並び。
       if (numericL && numericR) {
         paired = true;
       } else {
-        // それでも片側しか確認できない場合は、本体の罫線構造で全幅/2台を判定。
+        // それでも片側しか確認できない場合は、本体の罫線構造で全幅/2項目を判定。
         paired = bodyLooksPaired(frame, rowTitleEnd);
       }
 
@@ -1012,7 +1012,7 @@
         const body = findBodyBounds(frame, x0, x1, titleEnd);
         if (!body) {
           // 画面端にタイトル帯しか写っていない候補は採用しない。
-          // 次の重なり画像に完全版がある前提で、誤OCRによる幽霊台番を防ぐ。
+          // 次の重なり画像に完全版がある前提で、誤OCRによる誤った項目番号を防ぐ。
           debugLines.push(`${frame.file.name}: 画面端の不完全候補を除外`);
           return;
         }
@@ -1044,23 +1044,23 @@
 
       if (paired === true) {
         /*
-         * 2台並び。片側のタイトル番号検出だけ失敗していても、
-         * 灰色タイトル帯 + 本体罫線があれば両側を独立した台として扱う。
+         * 2項目並び。片側のタイトル番号検出だけ失敗していても、
+         * 灰色タイトル帯 + 本体罫線があれば両側を独立した項目として扱う。
          */
         if (L) pushCard(L, 0, half, 'half', L.y1, true);
         if (R) pushCard(R, half, frame.width, 'half', R.y1, true);
       } else if (paired === false) {
         /*
-         * 全幅1台。228番/270番のように右半分にも灰色帯
+         * 全幅1項目。右半分にも灰色帯
          * （「戻る」ボタンを含む）が存在しても、罫線構造で全幅と判定する。
          */
         const seg = numericL ? L : R;
         pushCard(seg, 0, frame.width, 'full', seg.y1, !seg.titleBox);
-        debugLines.push(`${frame.file.name}: 全幅1台行を検出`);
+        debugLines.push(`${frame.file.name}: 全幅1項目行を検出`);
       } else {
         /*
          * 画面端などで本体罫線だけでは判定不能な場合。
-         * 両側の番号領域が取れているなら2台扱い。
+         * 両側の番号領域が取れているなら2項目扱い。
          * 片側しか取れていなければ、誤って全幅化せずその側だけ半幅扱いにする。
          */
         if (numericL && numericR) {
@@ -1201,12 +1201,12 @@
     issues = [];
 
     /*
-     * 複数店舗・複数機種の画像を一度に扱う。
-     * 台番の全体昇順には並べ替えず、最初に画像内へ現れた順序を保持する。
-     * 同じ台番が複数画像にまたがって写った場合は重複統合する。
+     * 複数グループの画像を一度に扱う。
+     * 番号の全体昇順には並べ替えず、最初に画像内へ現れた順序を保持する。
+     * 同じ番号が複数画像にまたがって写った場合は重複統合する。
      *
-     * 現在の配置では対象台の台番は一意なので、台番を重複キーに使える。
-     * 店舗・機種の判定はSheets側の「配置」に任せる。
+     * 現在の配置では対象番号は一意なので、番号を重複キーに使える。
+     * カテゴリ判定はSheets側の「配置」に任せる。
      */
     const groups = new Map();
     const unresolved = [];
@@ -1295,8 +1295,8 @@
     rows.sort((a, b) => (a.outputOrder ?? 0) - (b.outputOrder ?? 0));
 
     /*
-     * 旧版の「最小台番～最大台番まで全部連番であるべき」という検査は廃止。
-     * 複数店舗・複数機種を同時投入すると、正常でも大きな欠番が生じるため。
+     * 旧版の「最小番号～最大番号まで全部連番であるべき」という検査は廃止。
+     * 複数グループを同時投入すると、正常でも大きな欠番が生じるため。
      * 各画像内でOCRが1項目だけ落ちたケースは inferMissingItemNumbers() が
      * 前後から一意に決まるときだけ補完する。
      */
