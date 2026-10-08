@@ -35,14 +35,14 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
       -webkit-font-smoothing: antialiased;
-      padding: 0 0 calc(104px + env(safe-area-inset-bottom));
+      padding: 0 0 calc(164px + env(safe-area-inset-bottom));
     }
     button, input { font: inherit; }
     button { -webkit-tap-highlight-color: transparent; }
     .wrap {
       width: min(760px, 100%);
       margin: 0 auto;
-      padding: calc(18px + env(safe-area-inset-top)) 14px 110px;
+      padding: calc(18px + env(safe-area-inset-top)) 14px 170px;
     }
     header { margin: 4px 2px 20px; }
     h1 {
@@ -273,7 +273,7 @@
     .num-input.invalid { border-color: var(--bad); }
     .copy-dock {
       position: sticky;
-      bottom: calc(78px + env(safe-area-inset-bottom));
+      bottom: calc(138px + env(safe-area-inset-bottom));
       margin-top: 14px;
       padding-top: 8px;
       background: linear-gradient(to bottom, rgba(20,24,29,0), var(--panel) 28%);
@@ -368,7 +368,33 @@
       margin: 0 auto;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 8px 12px;
+    }
+    .fixed-date-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 10px;
+      min-height: 40px;
+    }
+    .fixed-date-row label {
+      color: #c9d1d9;
+      font-size: 13px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .fixed-date-input {
+      width: 100%;
+      min-width: 0;
+      min-height: 40px;
+      border-radius: 11px;
+      border: 1px solid #3a4652;
+      background: #1b2027;
+      color: #fff;
+      padding: 0 11px;
+      font-weight: 750;
+      color-scheme: dark;
     }
     .fixed-action-btn {
       min-height: 56px;
@@ -401,7 +427,7 @@
   <main class="wrap">
     <header>
       <h1>PAC Reader</h1>
-      <p class="lead">複数の画像をまとめて読み取り、番号・値A・値Bの3列に整形してコピーします。画像選択後は自動で読み取りを開始します。異なる画面の画像が混在していても構いません。</p>
+      <p class="lead">営業日を確認して画像を選ぶと、自動で読み取りを開始します。結果を確認後、「結果コピー」を押すと営業日＋番号・値A・値Bをまとめてコピーします。異なる画面の画像が混在していても構いません。</p>
     </header>
 
     <section class="card">
@@ -447,11 +473,15 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261008_014000.002</p>
+    <p class="footer-note">ver 20261008_202400.003</p>
   </main>
 
   <footer class="fixed-action-bar" aria-label="固定操作">
     <div class="fixed-action-inner">
+      <div class="fixed-date-row">
+        <label for="businessDate">営業日</label>
+        <input id="businessDate" class="fixed-date-input" type="date" aria-label="営業日">
+      </div>
       <button id="footerPickBtn" class="fixed-action-btn" type="button">画像<br>選択</button>
       <button id="footerCopyBtn" class="fixed-action-btn copy" type="button" disabled>結果<br>コピー</button>
     </div>
@@ -479,6 +509,7 @@
   const diagnosticCopyBtn = $('#diagnosticCopyBtn');
   const debugText = $('#debugText');
   const toast = $('#toast');
+  const businessDate = $('#businessDate');
   const footerPickBtn = $('#footerPickBtn');
   const footerCopyBtn = $('#footerCopyBtn');
 
@@ -489,10 +520,8 @@
   let debugLines = [];
   let busy = false;
   let toastTimer = null;
-  let lastAutoAttemptSignature = '';
-  let lastSuccessfulCopySignature = '';
   let issueHistory = [];
-  const APP_VERSION = '20261008_014000.002';
+  const APP_VERSION = '20261008_202400.003';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -521,11 +550,21 @@
 
   toast.addEventListener('click', hideToast);
 
-  function currentResultSignature() {
-    return mergedRows
-      .map(r => `${r.itemNumber ?? ''}	${r.valueA ?? ''}	${r.valueB ?? ''}`)
-      .join('\n');
+  function localTodayString() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   }
+
+  function businessDateIsValid() {
+    const value = String(businessDate.value || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const [y, m, d] = value.split('-').map(Number);
+    const test = new Date(y, m - 1, d);
+    return test.getFullYear() === y && test.getMonth() === m - 1 && test.getDate() === d;
+  }
+
+  businessDate.value = localTodayString();
 
   function rowIsValid(row) {
     return Number.isInteger(row.itemNumber) && row.itemNumber > 0 &&
@@ -564,7 +603,7 @@
   }
 
   function resultIsCopyable() {
-    return validateCurrentRows().valid && !hasBlockingIssue();
+    return businessDateIsValid() && validateCurrentRows().valid && !hasBlockingIssue();
   }
 
   function setStatus(main, sub = '', pct = null) {
@@ -599,8 +638,6 @@
 
   fileInput.addEventListener('change', () => {
     selectedFiles = Array.from(fileInput.files || []);
-    lastAutoAttemptSignature = '';
-    lastSuccessfulCopySignature = '';
     renderFiles();
     resultsCard.hidden = true;
     statusCard.hidden = true;
@@ -612,6 +649,11 @@
     fileInput.click();
   });
 
+  businessDate.addEventListener('change', () => {
+    updateTsv();
+    if (resultsCard.hidden === false) debugText.textContent = buildDiagnosticText();
+  });
+
   resetBtn.addEventListener('click', () => {
     if (busy) return;
     fileInput.value = '';
@@ -621,8 +663,6 @@
     issues = [];
     debugLines = [];
     issueHistory = [];
-    lastAutoAttemptSignature = '';
-    lastSuccessfulCopySignature = '';
     fileList.innerHTML = '';
     resultBody.innerHTML = '';
     warnBox.innerHTML = '';
@@ -1654,11 +1694,9 @@
     debugText.textContent = buildDiagnosticText();
   }
 
-  async function onResultCommit() {
+  function onResultCommit() {
     updateTsv();
-    if (resultIsCopyable()) {
-      await maybeAutoCopy('edit-auto');
-    }
+    debugText.textContent = buildDiagnosticText();
   }
 
   function rowsAreComplete() {
@@ -1673,6 +1711,7 @@
     const lines = [];
     lines.push('PAC Reader 診断');
     lines.push(`version: ${APP_VERSION}`);
+    lines.push(`営業日: ${businessDate.value || '(未選択)'}`);
     lines.push(`状態: ${hasReadingIssue() ? '読み取り異常' : '正常'}`);
     lines.push(`画像数: ${selectedFiles.length}`);
     lines.push(`最終件数: ${mergedRows.length}`);
@@ -1714,9 +1753,10 @@
     const outputRows = mergedRows.filter(r => Number.isInteger(r.itemNumber));
     const copyable = resultIsCopyable();
 
-    tsvPreview.value = outputRows
+    const dataText = outputRows
       .map(r => `${r.itemNumber ?? ''}	${r.valueA ?? ''}	${r.valueB ?? ''}`)
       .join('\n');
+    tsvPreview.value = `${businessDate.value || ''}${dataText ? `\n${dataText}` : ''}`;
 
     copyBtn.classList.remove('done');
     copyBtn.disabled = !copyable;
@@ -1753,21 +1793,22 @@
     if (!ok) throw clipboardError || new Error('コピーできませんでした');
   }
 
-  async function attemptResultCopy(source = 'button') {
+  async function attemptResultCopy() {
+    if (!businessDateIsValid()) {
+      showToast('営業日を選択してください。', 'error');
+      return false;
+    }
     if (!resultIsCopyable()) {
       showToast('未確定または不正な値があるためコピーできません。', 'error');
       return false;
     }
     const text = tsvPreview.value;
-    const signature = currentResultSignature();
     try {
       await copyText(text);
-      lastSuccessfulCopySignature = signature;
       copyBtn.classList.add('done');
       footerCopyBtn.classList.add('done');
       copyBtn.textContent = 'コピーしました';
-      const prefix = source === 'button' ? '' : '自動';
-      showToast(`✓ ${mergedRows.length}件を${prefix}コピーしました`, 'success');
+      showToast(`✓ ${mergedRows.length}件をコピーしました`, 'success');
       setTimeout(() => {
         copyBtn.classList.remove('done');
         footerCopyBtn.classList.remove('done');
@@ -1775,26 +1816,13 @@
       }, 1400);
       return true;
     } catch (err) {
-      const auto = source !== 'button';
-      showToast(
-        auto ? '自動コピーできませんでした。「結果コピー」を押してください。' : `コピーに失敗しました: ${err?.message || err}`,
-        'error',
-        4200
-      );
+      showToast(`コピーに失敗しました: ${err?.message || err}`, 'error', 4200);
       return false;
     }
   }
 
-  async function maybeAutoCopy(source) {
-    if (!resultIsCopyable()) return false;
-    const signature = currentResultSignature();
-    if (!signature || signature === lastAutoAttemptSignature) return false;
-    lastAutoAttemptSignature = signature;
-    return attemptResultCopy(source);
-  }
-
-  copyBtn.addEventListener('click', () => void attemptResultCopy('button'));
-  footerCopyBtn.addEventListener('click', () => void attemptResultCopy('button'));
+  copyBtn.addEventListener('click', () => void attemptResultCopy());
+  footerCopyBtn.addEventListener('click', () => void attemptResultCopy());
 
   diagnosticCopyBtn.addEventListener('click', async () => {
     try {
@@ -1830,8 +1858,6 @@
     issueHistory = [];
     debugLines = [];
     mergedRows = [];
-    lastAutoAttemptSignature = '';
-    lastSuccessfulCopySignature = '';
     const started = performance.now();
     let worker = null;
 
@@ -1926,7 +1952,6 @@
       }
       setStatus('完了', `${mergedRows.length}件 / ${elapsed}秒`, 100);
       renderResults();
-      await maybeAutoCopy('ocr-auto');
       resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       console.error(err);
