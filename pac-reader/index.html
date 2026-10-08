@@ -356,8 +356,8 @@
       left: 0;
       right: 0;
       bottom: 0;
-      padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
-      background: rgba(11, 13, 16, .96);
+      padding: 7px 10px calc(7px + env(safe-area-inset-bottom));
+      background: rgba(11, 13, 16, .97);
       border-top: 1px solid #2b333d;
       box-shadow: 0 -8px 26px rgba(0,0,0,.28);
       backdrop-filter: blur(12px);
@@ -367,44 +367,76 @@
       width: min(760px, 100%);
       margin: 0 auto;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px 12px;
+      grid-template-columns: minmax(0, 1.22fr) minmax(0, .89fr) minmax(0, .89fr);
+      grid-template-rows: 58px 20px 4px;
+      gap: 5px 6px;
+      align-items: stretch;
     }
-    .fixed-date-row {
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: auto minmax(0, 1fr);
-      align-items: center;
-      gap: 10px;
-      min-height: 40px;
+    .fixed-date-cell {
+      min-width: 0;
+      height: 58px;
+      padding: 5px 7px 6px;
+      border: 1px solid #3a4652;
+      border-radius: 13px;
+      background: #1b2027;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
     }
-    .fixed-date-row label {
-      color: #c9d1d9;
-      font-size: 13px;
-      font-weight: 750;
+    .fixed-date-cell label {
+      display: block;
+      margin: 0 0 2px;
+      color: #aeb8c3;
+      font-size: 10px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: .01em;
       white-space: nowrap;
     }
     .fixed-date-input {
+      display: block;
       width: 100%;
+      max-width: 100%;
       min-width: 0;
-      min-height: 40px;
-      border-radius: 11px;
-      border: 1px solid #3a4652;
-      background: #1b2027;
+      height: 36px;
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
       color: #fff;
-      padding: 0 11px;
-      font-weight: 750;
+      padding: 0;
+      outline: none;
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 36px;
       color-scheme: dark;
+      font-variant-numeric: tabular-nums;
+    }
+    .fixed-date-input::-webkit-date-and-time-value {
+      min-width: 0;
+      text-align: left;
+    }
+    .fixed-date-input::-webkit-calendar-picker-indicator {
+      margin: 0;
+      padding: 2px;
+      opacity: .78;
     }
     .fixed-action-btn {
-      min-height: 56px;
+      min-width: 0;
+      height: 58px;
+      min-height: 58px;
+      padding: 0 4px;
       border: 1px solid #3a4652;
       border-radius: 13px;
       background: #1b2027;
       color: #fff;
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: .01em;
+      font-size: 14px;
+      font-weight: 850;
+      line-height: 1.1;
+      letter-spacing: -.01em;
+      white-space: nowrap;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -415,6 +447,67 @@
     .fixed-action-btn.copy { background: var(--accent-strong); border-color: transparent; }
     .fixed-action-btn:disabled { opacity: .42; cursor: default; }
     .fixed-action-btn.done { background: #238657; }
+    .footer-progress-line {
+      grid-column: 1 / -1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #cbd5df;
+      line-height: 20px;
+      overflow: hidden;
+    }
+    .footer-progress-main {
+      flex: 0 0 auto;
+      max-width: 42%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .footer-progress-sub {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #8f9ba7;
+      font-size: 10px;
+      text-align: right;
+    }
+    .footer-progress-pct {
+      flex: 0 0 30px;
+      color: #b8c3ce;
+      font-size: 10px;
+      font-weight: 800;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .footer-progress-track {
+      grid-column: 1 / -1;
+      height: 4px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #202730;
+    }
+    .footer-progress-track > div {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent-strong), #65b7ff);
+      transition: width .15s linear;
+    }
+    @media (max-width: 360px) {
+      .fixed-action-bar { padding-left: 7px; padding-right: 7px; }
+      .fixed-action-inner {
+        grid-template-columns: minmax(0, 1.25fr) minmax(0, .875fr) minmax(0, .875fr);
+        column-gap: 4px;
+      }
+      .fixed-date-cell { padding-left: 5px; padding-right: 5px; }
+      .fixed-action-btn { font-size: 13px; padding-left: 2px; padding-right: 2px; }
+      .footer-progress-main { max-width: 38%; }
+    }
     @media (min-width: 620px) {
       .actions { grid-template-columns: 1fr auto; }
       .secondary { width: auto; padding: 0 20px; }
@@ -473,17 +566,23 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261008_202400.003</p>
+    <p class="footer-note">ver 20261009_002213.004</p>
   </main>
 
   <footer class="fixed-action-bar" aria-label="固定操作">
     <div class="fixed-action-inner">
-      <div class="fixed-date-row">
+      <div class="fixed-date-cell">
         <label for="businessDate">営業日</label>
         <input id="businessDate" class="fixed-date-input" type="date" aria-label="営業日">
       </div>
-      <button id="footerPickBtn" class="fixed-action-btn" type="button">画像<br>選択</button>
-      <button id="footerCopyBtn" class="fixed-action-btn copy" type="button" disabled>結果<br>コピー</button>
+      <button id="footerPickBtn" class="fixed-action-btn" type="button">画像選択</button>
+      <button id="footerCopyBtn" class="fixed-action-btn copy" type="button" disabled>結果コピー</button>
+      <div class="footer-progress-line" aria-live="polite">
+        <span id="footerStatusText" class="footer-progress-main">待機中</span>
+        <span id="footerStatusSub" class="footer-progress-sub">画像を選択</span>
+        <span id="footerStatusPct" class="footer-progress-pct">0%</span>
+      </div>
+      <div class="footer-progress-track" aria-hidden="true"><div id="footerProgressBar"></div></div>
     </div>
   </footer>
 
@@ -512,6 +611,10 @@
   const businessDate = $('#businessDate');
   const footerPickBtn = $('#footerPickBtn');
   const footerCopyBtn = $('#footerCopyBtn');
+  const footerStatusText = $('#footerStatusText');
+  const footerStatusSub = $('#footerStatusSub');
+  const footerStatusPct = $('#footerStatusPct');
+  const footerProgressBar = $('#footerProgressBar');
 
   let selectedFiles = [];
   let mergedRows = [];
@@ -521,7 +624,7 @@
   let busy = false;
   let toastTimer = null;
   let issueHistory = [];
-  const APP_VERSION = '20261008_202400.003';
+  const APP_VERSION = '20261009_002213.004';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -565,6 +668,7 @@
   }
 
   businessDate.value = localTodayString();
+  setTimeout(() => setFooterStatus('待機中', '画像を選択', 0), 0);
 
   function rowIsValid(row) {
     return Number.isInteger(row.itemNumber) && row.itemNumber > 0 &&
@@ -606,6 +710,14 @@
     return businessDateIsValid() && validateCurrentRows().valid && !hasBlockingIssue();
   }
 
+  function setFooterStatus(main, sub = '', pct = null) {
+    footerStatusText.textContent = main || '待機中';
+    footerStatusSub.textContent = sub || '';
+    const normalized = pct == null ? 0 : clamp(pct, 0, 100);
+    footerStatusPct.textContent = `${Math.round(normalized)}%`;
+    footerProgressBar.style.width = `${normalized}%`;
+  }
+
   function setStatus(main, sub = '', pct = null) {
     statusCard.hidden = false;
     statusText.textContent = main;
@@ -615,6 +727,7 @@
     } else {
       progressBar.style.width = `${clamp(pct, 0, 100)}%`;
     }
+    setFooterStatus(main, sub, pct);
   }
 
   function renderFiles() {
@@ -677,6 +790,7 @@
     diagnosticCopyBtn.textContent = '診断情報をコピー';
     footerCopyBtn.disabled = true;
     footerCopyBtn.classList.remove('done');
+    setFooterStatus('待機中', '画像を選択', 0);
     hideToast();
   });
 
@@ -1881,7 +1995,9 @@
       worker = await Tesseract.createWorker('eng', Tesseract.OEM?.LSTM_ONLY ?? 1, {
         logger: (m) => {
           if (m?.status && typeof m.progress === 'number') {
-            statusSub.textContent = `${m.status} ${Math.round(m.progress * 100)}%`;
+            const ocrSub = `${m.status} ${Math.round(m.progress * 100)}%`;
+            statusSub.textContent = ocrSub;
+            footerStatusSub.textContent = ocrSub;
           }
         }
       });
