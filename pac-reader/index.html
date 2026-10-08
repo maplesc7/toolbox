@@ -35,14 +35,14 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Yu Gothic", sans-serif;
       -webkit-font-smoothing: antialiased;
-      padding: 0 0 calc(24px + env(safe-area-inset-bottom));
+      padding: 0 0 calc(104px + env(safe-area-inset-bottom));
     }
     button, input { font: inherit; }
     button { -webkit-tap-highlight-color: transparent; }
     .wrap {
       width: min(760px, 100%);
       margin: 0 auto;
-      padding: calc(18px + env(safe-area-inset-top)) 14px 40px;
+      padding: calc(18px + env(safe-area-inset-top)) 14px 110px;
     }
     header { margin: 4px 2px 20px; }
     h1 {
@@ -230,7 +230,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 390px;
+      min-width: 320px;
       font-variant-numeric: tabular-nums;
     }
     th, td {
@@ -248,17 +248,18 @@
       font-weight: 700;
     }
     tr:last-child td { border-bottom: 0; }
-    td:first-child, th:first-child { text-align: center; width: 30%; }
+    td:first-child, th:first-child { text-align: center; width: 44%; }
+    td:nth-child(2), th:nth-child(2), td:nth-child(3), th:nth-child(3) { width: 28%; }
     .num-input {
       width: 100%;
-      min-width: 70px;
+      min-width: 0;
       height: 42px;
       border-radius: 9px;
       border: 1px solid #343e49;
       background: #161b21;
       color: #f8fafc;
       text-align: right;
-      padding: 0 10px;
+      padding: 0 8px;
       font-size: 17px;
       font-weight: 700;
       font-variant-numeric: tabular-nums;
@@ -272,7 +273,7 @@
     .num-input.invalid { border-color: var(--bad); }
     .copy-dock {
       position: sticky;
-      bottom: calc(10px + env(safe-area-inset-bottom));
+      bottom: calc(78px + env(safe-area-inset-bottom));
       margin-top: 14px;
       padding-top: 8px;
       background: linear-gradient(to bottom, rgba(20,24,29,0), var(--panel) 28%);
@@ -318,6 +319,76 @@
       font-size: 11px;
       line-height: 1.5;
     }
+    .toast-stack {
+      position: fixed;
+      z-index: 1000;
+      top: calc(10px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(92vw, 560px);
+      pointer-events: none;
+    }
+    .toast {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 11px 14px;
+      border-radius: 13px;
+      border: 1px solid #36516d;
+      background: rgba(18, 27, 36, .97);
+      color: #f5f8fb;
+      box-shadow: 0 12px 34px rgba(0,0,0,.38);
+      font-size: 13px;
+      line-height: 1.4;
+      pointer-events: auto;
+      cursor: pointer;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .toast.show { display: flex; }
+    .toast.success { border-color: #2f7958; background: rgba(20, 65, 46, .97); }
+    .toast.error { border-color: #8d4145; background: rgba(80, 28, 31, .97); }
+    .toast.info { border-color: #36516d; }
+    .fixed-action-bar {
+      position: fixed;
+      z-index: 900;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 8px 14px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(11, 13, 16, .96);
+      border-top: 1px solid #2b333d;
+      box-shadow: 0 -8px 26px rgba(0,0,0,.28);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .fixed-action-inner {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .fixed-action-btn {
+      min-height: 56px;
+      border: 1px solid #3a4652;
+      border-radius: 13px;
+      background: #1b2027;
+      color: #fff;
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: .01em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .fixed-action-btn.copy { background: var(--accent-strong); border-color: transparent; }
+    .fixed-action-btn:disabled { opacity: .42; cursor: default; }
+    .fixed-action-btn.done { background: #238657; }
     @media (min-width: 620px) {
       .actions { grid-template-columns: 1fr auto; }
       .secondary { width: auto; padding: 0 20px; }
@@ -326,10 +397,11 @@
   </style>
 </head>
 <body>
+  <div class="toast-stack"><div id="toast" class="toast" role="status" aria-live="polite"></div></div>
   <main class="wrap">
     <header>
       <h1>PAC Reader</h1>
-      <p class="lead">複数の画像をまとめて読み取り、番号・値A・値Bの3列に整形してコピーします。異なる画面の画像が混在していても構いません。</p>
+      <p class="lead">複数の画像をまとめて読み取り、番号・値A・値Bの3列に整形してコピーします。画像選択後は自動で読み取りを開始します。異なる画面の画像が混在していても構いません。</p>
     </header>
 
     <section class="card">
@@ -375,8 +447,15 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261008_014000.001</p>
+    <p class="footer-note">ver 20261008_014000.002</p>
   </main>
+
+  <footer class="fixed-action-bar" aria-label="固定操作">
+    <div class="fixed-action-inner">
+      <button id="footerPickBtn" class="fixed-action-btn" type="button">画像<br>選択</button>
+      <button id="footerCopyBtn" class="fixed-action-btn copy" type="button" disabled>結果<br>コピー</button>
+    </div>
+  </footer>
 
 <script>
 (() => {
@@ -399,6 +478,9 @@
   const copyBtn = $('#copyBtn');
   const diagnosticCopyBtn = $('#diagnosticCopyBtn');
   const debugText = $('#debugText');
+  const toast = $('#toast');
+  const footerPickBtn = $('#footerPickBtn');
+  const footerCopyBtn = $('#footerCopyBtn');
 
   let selectedFiles = [];
   let mergedRows = [];
@@ -406,11 +488,84 @@
   let issues = [];
   let debugLines = [];
   let busy = false;
-  const APP_VERSION = '20261008_014000.001';
+  let toastTimer = null;
+  let lastAutoAttemptSignature = '';
+  let lastSuccessfulCopySignature = '';
+  let issueHistory = [];
+  const APP_VERSION = '20261008_014000.002';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
   const fmtBytes = (n) => n < 1024 * 1024 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`;
+
+  function showToast(message, type = 'info', ms = 3200) {
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+      toastTimer = null;
+    }
+    toast.textContent = message;
+    toast.className = `toast show ${type}`;
+    if (ms > 0) {
+      toastTimer = setTimeout(() => hideToast(), ms);
+    }
+  }
+
+  function hideToast() {
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+      toastTimer = null;
+    }
+    toast.className = 'toast';
+    toast.textContent = '';
+  }
+
+  toast.addEventListener('click', hideToast);
+
+  function currentResultSignature() {
+    return mergedRows
+      .map(r => `${r.itemNumber ?? ''}	${r.valueA ?? ''}	${r.valueB ?? ''}`)
+      .join('\n');
+  }
+
+  function rowIsValid(row) {
+    return Number.isInteger(row.itemNumber) && row.itemNumber > 0 &&
+      Number.isInteger(row.valueA) && row.valueA >= 0 &&
+      Number.isInteger(row.valueB) && row.valueB >= 0;
+  }
+
+  function validateCurrentRows() {
+    if (!mergedRows.length) return { valid: false, messages: ['認識結果がありません。'] };
+    const messages = [];
+    const seen = new Map();
+    for (let i = 0; i < mergedRows.length; i++) {
+      const row = mergedRows[i];
+      if (!Number.isInteger(row.itemNumber) || row.itemNumber <= 0) {
+        messages.push(`${i + 1}行目の番号が未確定です。`);
+      }
+      if (!Number.isInteger(row.valueA) || row.valueA < 0) {
+        messages.push(`${row.itemNumber ?? i + 1}番の値Aが未確定です。`);
+      }
+      if (!Number.isInteger(row.valueB) || row.valueB < 0) {
+        messages.push(`${row.itemNumber ?? i + 1}番の値Bが未確定です。`);
+      }
+      if (Number.isInteger(row.itemNumber) && row.itemNumber > 0) {
+        if (seen.has(row.itemNumber)) {
+          messages.push(`番号 ${row.itemNumber} が重複しています。`);
+        } else {
+          seen.set(row.itemNumber, i);
+        }
+      }
+    }
+    return { valid: messages.length === 0, messages };
+  }
+
+  function hasBlockingIssue() {
+    return issues.some(issue => issue.type === 'fatal' || !issue.resolved);
+  }
+
+  function resultIsCopyable() {
+    return validateCurrentRows().valid && !hasBlockingIssue();
+  }
 
   function setStatus(main, sub = '', pct = null) {
     statusCard.hidden = false;
@@ -438,13 +593,23 @@
       fileList.append(row);
     }
     analyzeBtn.disabled = busy || selectedFiles.length === 0;
+    fileInput.disabled = busy;
+    footerPickBtn.disabled = busy;
   }
 
   fileInput.addEventListener('change', () => {
     selectedFiles = Array.from(fileInput.files || []);
+    lastAutoAttemptSignature = '';
+    lastSuccessfulCopySignature = '';
     renderFiles();
     resultsCard.hidden = true;
     statusCard.hidden = true;
+    if (selectedFiles.length) void analyzeSelectedFiles();
+  });
+
+  footerPickBtn.addEventListener('click', () => {
+    if (busy) return;
+    fileInput.click();
   });
 
   resetBtn.addEventListener('click', () => {
@@ -455,6 +620,9 @@
     warnings = [];
     issues = [];
     debugLines = [];
+    issueHistory = [];
+    lastAutoAttemptSignature = '';
+    lastSuccessfulCopySignature = '';
     fileList.innerHTML = '';
     resultBody.innerHTML = '';
     warnBox.innerHTML = '';
@@ -467,6 +635,9 @@
     diagnosticCopyBtn.classList.remove('done');
     diagnosticCopyBtn.classList.add('diagnostic');
     diagnosticCopyBtn.textContent = '診断情報をコピー';
+    footerCopyBtn.disabled = true;
+    footerCopyBtn.classList.remove('done');
+    hideToast();
   });
 
   async function loadImageFile(file) {
@@ -905,6 +1076,52 @@
     return out;
   }
 
+  function expandBox(frame, box, padPx) {
+    if (!box) return null;
+    const p = Math.max(2, Math.round(padPx));
+    return {
+      x0: clamp(Math.floor(box.x0) - p, 0, frame.width - 1),
+      y0: clamp(Math.floor(box.y0) - p, 0, frame.height - 1),
+      x1: clamp(Math.ceil(box.x1) + p, 1, frame.width),
+      y1: clamp(Math.ceil(box.y1) + p, 1, frame.height)
+    };
+  }
+
+  function makeDarkBinaryCanvas(frame, box, threshold = 180, factor = 5) {
+    if (!box) return null;
+    const sx = clamp(Math.floor(box.x0), 0, frame.width - 1);
+    const sy = clamp(Math.floor(box.y0), 0, frame.height - 1);
+    const ex = clamp(Math.ceil(box.x1), sx + 1, frame.width);
+    const ey = clamp(Math.ceil(box.y1), sy + 1, frame.height);
+    const sw = ex - sx, sh = ey - sy;
+    const small = document.createElement('canvas');
+    small.width = sw;
+    small.height = sh;
+    const sctx = small.getContext('2d');
+    const binary = sctx.createImageData(sw, sh);
+    for (let y = 0; y < sh; y++) {
+      for (let x = 0; x < sw; x++) {
+        const v = lumaAt(frame, sx + x, sy + y) < threshold ? 0 : 255;
+        const i = (y * sw + x) * 4;
+        binary.data[i] = v;
+        binary.data[i + 1] = v;
+        binary.data[i + 2] = v;
+        binary.data[i + 3] = 255;
+      }
+    }
+    sctx.putImageData(binary, 0, 0);
+    const border = Math.max(18, Math.round(4 * factor));
+    const out = document.createElement('canvas');
+    out.width = sw * factor + border * 2;
+    out.height = sh * factor + border * 2;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, out.width, out.height);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(small, 0, 0, sw, sh, border, border, sw * factor, sh * factor);
+    return out;
+  }
+
   function makeInvertedLightBinaryCanvas(frame, box, threshold = 190, factor = 5) {
     if (!box) return null;
     const sx = clamp(Math.floor(box.x0), 0, frame.width - 1);
@@ -1025,6 +1242,7 @@
           x0, x1, kind, top: body.top, bottom: body.bottom,
           valueABox: null, valueBBox: null, valueA: null, valueB: null,
           valueAConfidence: null, valueBConfidence: null,
+          valueAAttempts: [], valueBAttempts: [],
           captureState: 'complete',
           errors: []
         };
@@ -1088,6 +1306,43 @@
       confidence: Number.isFinite(res?.data?.confidence) ? res.data.confidence : null,
       raw
     };
+  }
+
+  async function recognizeValueWithRetry(worker, card, key, box) {
+    const attemptsKey = key === 'valueA' ? 'valueAAttempts' : 'valueBAttempts';
+    if (!Array.isArray(card[attemptsKey])) card[attemptsKey] = [];
+    const record = (method, result) => {
+      card[attemptsKey].push({ method, raw: (result.raw ?? '').trim(), confidence: result.confidence });
+      return result;
+    };
+
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    let r = record('primary', await recognizeCanvas(worker, makeCropCanvas(card.frame, box, 4)));
+    if (r.value != null) return r;
+
+    const paddedBox = expandBox(card.frame, box, 10 * card.frame.scale);
+    r = record('retry-padded', await recognizeCanvas(worker, makeCropCanvas(card.frame, paddedBox, 5)));
+    if (r.value != null) return r;
+
+    const binaryBox = expandBox(card.frame, box, 8 * card.frame.scale);
+    r = record('retry-binary-180', await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, binaryBox, 180, 5)));
+    if (r.value != null) return r;
+
+    // SINGLE_CHAR は単数字らしい領域だけに限定する。
+    // 複数桁を誤って1桁として確定することを避ける。
+    const boxW = Math.max(1, box.x1 - box.x0);
+    const boxH = Math.max(1, box.y1 - box.y0);
+    const singleLike = boxW <= boxH * 0.92;
+    if (singleLike) {
+      await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_CHAR ?? '10' });
+      r = record('retry-single-char-padded', await recognizeCanvas(worker, makeCropCanvas(card.frame, paddedBox, 6)));
+      if (r.value == null) {
+        r = record('retry-single-char-binary', await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, binaryBox, 195, 6)));
+      }
+    }
+
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    return r;
   }
 
   function assignItemResult(card, result, method) {
@@ -1193,7 +1448,9 @@
   }
 
   function addIssue(type, message, data = {}) {
-    issues.push({ type, message, ...data });
+    const issue = { type, message, resolved: false, ...data };
+    issues.push(issue);
+    issueHistory.push({ ...issue });
   }
 
   function mergeEntries(cards) {
@@ -1250,7 +1507,7 @@
           addIssue(
             'conflict',
             `${itemNumber}番の完全な認識結果が画像間で一致しません（${variants}）。`,
-            { itemNumber }
+            { itemNumber, rowKey: chosen.sourceOrder ?? null }
           );
         }
       } else {
@@ -1260,14 +1517,14 @@
           addIssue(
             'partial-only',
             `${itemNumber}番は画像内に完全な読み取り領域がありません。`,
-            { itemNumber }
+            { itemNumber, rowKey: chosen.sourceOrder ?? null }
           );
         } else {
           if (chosen.valueA == null) {
-            addIssue('missing-value-a', `${itemNumber}番の値Aを確定できませんでした。`, { itemNumber });
+            addIssue('missing-value-a', `${itemNumber}番の値Aを確定できませんでした。`, { itemNumber, rowKey: chosen.sourceOrder ?? null, field: 'valueA' });
           }
           if (chosen.valueB == null) {
-            addIssue('missing-value-b', `${itemNumber}番の値Bを確定できませんでした。`, { itemNumber });
+            addIssue('missing-value-b', `${itemNumber}番の値Bを確定できませんでした。`, { itemNumber, rowKey: chosen.sourceOrder ?? null, field: 'valueB' });
           }
         }
       }
@@ -1287,7 +1544,7 @@
       addIssue(
         'missing-item-number',
         `${c.fileName}: 番号を確定できない項目があります（${attempts}）。`,
-        { fileName: c.fileName }
+        { fileName: c.fileName, rowKey: c.sourceOrder ?? null, field: 'itemNumber' }
       );
     }
 
@@ -1325,53 +1582,91 @@
         const input = document.createElement('input');
         input.type = 'number';
         input.inputMode = 'numeric';
-        input.min = '0';
+        input.min = col === 0 ? '1' : '0';
         input.step = '1';
         input.className = `num-input${col === 0 ? ' item-id' : ''}${v == null ? ' invalid' : ''}`;
         input.value = v == null ? '' : String(v);
         input.placeholder = '?';
         input.dataset.row = String(i);
         input.dataset.key = keys[col];
+        input.dataset.rowKey = String(row.sourceOrder ?? row.outputOrder ?? i);
         input.addEventListener('focus', () => input.select());
         input.addEventListener('input', onResultEdit);
+        input.addEventListener('change', onResultCommit);
+        input.addEventListener('blur', onResultCommit);
         td.append(input);
         tr.append(td);
       });
       resultBody.append(tr);
     }
 
-    const uniqueWarnings = [...new Set(warnings)];
-    for (const w of uniqueWarnings) {
+    renderWarnings();
+    updateTsv();
+    debugText.textContent = debugLines.join('\n');
+    resultsCard.hidden = false;
+  }
+
+  function renderWarnings() {
+    warnBox.innerHTML = '';
+    const dynamic = validateCurrentRows().messages;
+    const currentIssues = issues.filter(issue => !issue.resolved).map(issue => issue.message);
+    const all = [...new Set([...currentIssues, ...dynamic])];
+    for (const w of all) {
       const div = document.createElement('div');
       div.className = 'warning';
       div.textContent = w;
       warnBox.append(div);
     }
-    updateTsv();
-    debugText.textContent = debugLines.join('\n');
-    resultsCard.hidden = false;
+  }
+
+  function resolveIssuesForRow(row) {
+    const rowKey = row.sourceOrder ?? row.outputOrder ?? null;
+    const edited = row.manualEditedKeys instanceof Set ? row.manualEditedKeys : new Set();
+    for (const issue of issues) {
+      if (issue.resolved || issue.type === 'fatal') continue;
+      const sameRow = issue.rowKey != null && rowKey != null && String(issue.rowKey) === String(rowKey);
+      const sameItem = issue.itemNumber != null && Number.isInteger(row.itemNumber) && issue.itemNumber === row.itemNumber;
+      if (!sameRow && !sameItem) continue;
+      let resolved = false;
+      if (issue.type === 'missing-value-a') resolved = edited.has('valueA') && Number.isInteger(row.valueA) && row.valueA >= 0;
+      else if (issue.type === 'missing-value-b') resolved = edited.has('valueB') && Number.isInteger(row.valueB) && row.valueB >= 0;
+      else if (issue.type === 'missing-item-number') resolved = edited.has('itemNumber') && Number.isInteger(row.itemNumber) && row.itemNumber > 0;
+      else if (issue.type === 'partial-only' || issue.type === 'conflict') resolved = edited.size > 0 && rowIsValid(row);
+      if (resolved) {
+        issue.resolved = true;
+        debugLines.push(`manual resolve: ${issue.message}`);
+      }
+    }
   }
 
   function onResultEdit(e) {
     const input = e.currentTarget;
     const row = mergedRows[Number(input.dataset.row)];
     const key = input.dataset.key;
-    const ds = digitsOnly(input.value);
-    row[key] = ds ? Number(ds) : null;
-    input.classList.toggle('invalid', row[key] == null);
+    const raw = String(input.value ?? '').trim();
+    row[key] = /^\d+$/.test(raw) ? Number(raw) : null;
+    if (!(row.manualEditedKeys instanceof Set)) row.manualEditedKeys = new Set();
+    row.manualEditedKeys.add(key);
+    input.classList.toggle('invalid', row[key] == null || (key === 'itemNumber' && row[key] <= 0));
+    resolveIssuesForRow(row);
+    renderWarnings();
     updateTsv();
+    debugText.textContent = buildDiagnosticText();
+  }
+
+  async function onResultCommit() {
+    updateTsv();
+    if (resultIsCopyable()) {
+      await maybeAutoCopy('edit-auto');
+    }
   }
 
   function rowsAreComplete() {
-    return mergedRows.length > 0 && mergedRows.every(r =>
-      Number.isInteger(r.itemNumber) &&
-      Number.isInteger(r.valueA) &&
-      Number.isInteger(r.valueB)
-    );
+    return validateCurrentRows().valid;
   }
 
   function hasReadingIssue() {
-    return issues.length > 0 || !rowsAreComplete();
+    return !resultIsCopyable();
   }
 
   function buildDiagnosticText() {
@@ -1389,8 +1684,9 @@
     }
     lines.push('');
     lines.push('--- 異常 ---');
-    if (issues.length) {
-      for (const issue of issues) lines.push(`- ${issue.message}`);
+    const unresolvedIssues = issues.filter(issue => !issue.resolved);
+    if (unresolvedIssues.length) {
+      for (const issue of unresolvedIssues) lines.push(`- ${issue.message}`);
     } else if (!rowsAreComplete()) {
       lines.push('- 未確定の項目があります。');
     } else {
@@ -1403,23 +1699,30 @@
       lines.push(`${row.itemNumber ?? '?'}\t${row.valueA ?? '?'}\t${row.valueB ?? '?'}`);
     }
     lines.push('');
+    if (issueHistory.length) {
+      lines.push('');
+      lines.push('--- 読み取り履歴 ---');
+      for (const issue of issueHistory) lines.push(`- ${issue.message}`);
+    }
+    lines.push('');
     lines.push('--- 診断ログ ---');
     lines.push(...debugLines);
     return lines.join('\n');
   }
 
   function updateTsv() {
-    const complete = rowsAreComplete();
-    const abnormal = hasReadingIssue();
     const outputRows = mergedRows.filter(r => Number.isInteger(r.itemNumber));
+    const copyable = resultIsCopyable();
 
     tsvPreview.value = outputRows
-      .map(r => `${r.itemNumber ?? ''}\t${r.valueA ?? ''}\t${r.valueB ?? ''}`)
+      .map(r => `${r.itemNumber ?? ''}	${r.valueA ?? ''}	${r.valueB ?? ''}`)
       .join('\n');
 
     copyBtn.classList.remove('done');
-    copyBtn.disabled = !complete || !outputRows.length || abnormal;
+    copyBtn.disabled = !copyable;
     copyBtn.textContent = '結果をコピー';
+    footerCopyBtn.classList.remove('done');
+    footerCopyBtn.disabled = !copyable;
 
     diagnosticCopyBtn.classList.remove('done');
     diagnosticCopyBtn.classList.add('diagnostic');
@@ -1428,34 +1731,70 @@
   }
 
   async function copyText(text) {
+    let clipboardError = null;
     if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
-      return;
+      try {
+        await navigator.clipboard.writeText(text);
+        return;
+      } catch (err) {
+        clipboardError = err;
+      }
     }
     const ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
     ta.style.opacity = '0';
+    ta.style.pointerEvents = 'none';
     document.body.append(ta);
+    ta.focus();
     ta.select();
     const ok = document.execCommand('copy');
     ta.remove();
-    if (!ok) throw new Error('コピーできませんでした');
+    if (!ok) throw clipboardError || new Error('コピーできませんでした');
   }
 
-  copyBtn.addEventListener('click', async () => {
+  async function attemptResultCopy(source = 'button') {
+    if (!resultIsCopyable()) {
+      showToast('未確定または不正な値があるためコピーできません。', 'error');
+      return false;
+    }
+    const text = tsvPreview.value;
+    const signature = currentResultSignature();
     try {
-      await copyText(tsvPreview.value);
+      await copyText(text);
+      lastSuccessfulCopySignature = signature;
       copyBtn.classList.add('done');
+      footerCopyBtn.classList.add('done');
       copyBtn.textContent = 'コピーしました';
+      const prefix = source === 'button' ? '' : '自動';
+      showToast(`✓ ${mergedRows.length}件を${prefix}コピーしました`, 'success');
       setTimeout(() => {
         copyBtn.classList.remove('done');
+        footerCopyBtn.classList.remove('done');
         updateTsv();
       }, 1400);
+      return true;
     } catch (err) {
-      alert(`コピーに失敗しました: ${err.message}`);
+      const auto = source !== 'button';
+      showToast(
+        auto ? '自動コピーできませんでした。「結果コピー」を押してください。' : `コピーに失敗しました: ${err?.message || err}`,
+        'error',
+        4200
+      );
+      return false;
     }
-  });
+  }
+
+  async function maybeAutoCopy(source) {
+    if (!resultIsCopyable()) return false;
+    const signature = currentResultSignature();
+    if (!signature || signature === lastAutoAttemptSignature) return false;
+    lastAutoAttemptSignature = signature;
+    return attemptResultCopy(source);
+  }
+
+  copyBtn.addEventListener('click', () => void attemptResultCopy('button'));
+  footerCopyBtn.addEventListener('click', () => void attemptResultCopy('button'));
 
   diagnosticCopyBtn.addEventListener('click', async () => {
     try {
@@ -1463,26 +1802,36 @@
       diagnosticCopyBtn.classList.remove('diagnostic');
       diagnosticCopyBtn.classList.add('done');
       diagnosticCopyBtn.textContent = '診断情報をコピーしました';
+      showToast('診断情報をコピーしました', 'success');
       setTimeout(() => {
         diagnosticCopyBtn.classList.remove('done');
         diagnosticCopyBtn.classList.add('diagnostic');
         diagnosticCopyBtn.textContent = '診断情報をコピー';
       }, 1400);
     } catch (err) {
-      alert(`コピーに失敗しました: ${err.message}`);
+      showToast(`診断情報のコピーに失敗しました: ${err?.message || err}`, 'error', 4200);
     }
   });
 
 
-  analyzeBtn.addEventListener('click', async () => {
+  async function analyzeSelectedFiles() {
     if (busy || !selectedFiles.length) return;
     busy = true;
+    renderFiles();
     analyzeBtn.disabled = true;
+    copyBtn.disabled = true;
+    footerCopyBtn.disabled = true;
+    copyBtn.classList.remove('done');
+    footerCopyBtn.classList.remove('done');
+    tsvPreview.value = '';
     resultsCard.hidden = true;
     warnings = [];
     issues = [];
+    issueHistory = [];
     debugLines = [];
     mergedRows = [];
+    lastAutoAttemptSignature = '';
+    lastSuccessfulCopySignature = '';
     const started = performance.now();
     let worker = null;
 
@@ -1538,7 +1887,7 @@
       for (const card of allCards) {
         progress('値Aを認識中…');
         if (card.valueABox) {
-          const r = await recognizeCanvas(worker, makeCropCanvas(card.frame, card.valueABox, 4));
+          const r = await recognizeValueWithRetry(worker, card, 'valueA', card.valueABox);
           card.valueA = r.value;
           card.valueAConfidence = r.confidence;
         }
@@ -1548,7 +1897,7 @@
       for (const card of allCards) {
         progress('値Bを認識中…');
         if (card.valueBBox) {
-          const r = await recognizeCanvas(worker, makeCropCanvas(card.frame, card.valueBBox, 4));
+          const r = await recognizeValueWithRetry(worker, card, 'valueB', card.valueBBox);
           card.valueB = r.value;
           card.valueBConfidence = r.confidence;
         }
@@ -1566,11 +1915,18 @@
         const attempts = c.itemAttempts.length
           ? ` | attempts=${c.itemAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
           : '';
+        const valueAAttempts = c.valueAAttempts?.length
+          ? ` | valueA-attempts=${c.valueAAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
+          : '';
+        const valueBAttempts = c.valueBAttempts?.length
+          ? ` | valueB-attempts=${c.valueBAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
+          : '';
         const errorDetail = c.errors.length ? ` | errors=${c.errors.join(' / ')}` : '';
-        debugLines.push(`${c.fileName} | ${c.itemNumber ?? '?'} [${itemDetail}] | valueA=${c.valueA ?? '?'} (${Math.round(c.valueAConfidence ?? 0)}) | valueB=${c.valueB ?? '?'} (${Math.round(c.valueBConfidence ?? 0)}) | ${c.kind} | ${c.captureState}${attempts}${errorDetail}`);
+        debugLines.push(`${c.fileName} | ${c.itemNumber ?? '?'} [${itemDetail}] | valueA=${c.valueA ?? '?'} (${Math.round(c.valueAConfidence ?? 0)}) | valueB=${c.valueB ?? '?'} (${Math.round(c.valueBConfidence ?? 0)}) | ${c.kind} | ${c.captureState}${attempts}${valueAAttempts}${valueBAttempts}${errorDetail}`);
       }
       setStatus('完了', `${mergedRows.length}件 / ${elapsed}秒`, 100);
       renderResults();
+      await maybeAutoCopy('ocr-auto');
       resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       console.error(err);
@@ -1587,7 +1943,9 @@
       busy = false;
       renderFiles();
     }
-  });
+  }
+
+  analyzeBtn.addEventListener('click', () => void analyzeSelectedFiles());
 })();
 </script>
 </body>
