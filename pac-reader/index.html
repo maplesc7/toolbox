@@ -520,7 +520,7 @@
   <main class="wrap">
     <header>
       <h1>PAC Reader</h1>
-      <p class="lead">営業日を確認して画像を選ぶと、自動で読み取りを開始します。結果を確認後、「結果コピー」を押すと営業日＋番号・値A・値Bをまとめてコピーします。異なる画面の画像が混在していても構いません。</p>
+      <p class="lead">画像を選ぶと、詳細画面から営業日を自動取得して読み取りを開始します。結果を確認後、「結果コピー」を押すと営業日＋番号・値A・値Bをまとめてコピーします。異なる画面の画像が混在していても構いません。</p>
     </header>
 
     <section class="card">
@@ -566,7 +566,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261009_002213.004</p>
+    <p class="footer-note">ver 20261009_113800.005</p>
   </main>
 
   <footer class="fixed-action-bar" aria-label="固定操作">
@@ -624,7 +624,8 @@
   let busy = false;
   let toastTimer = null;
   let issueHistory = [];
-  const APP_VERSION = '20261009_002213.004';
+  let businessDateAutoResult = { status: 'idle', detailCount: 0, detections: [] };
+  const APP_VERSION = '20261009_113800.005';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -776,6 +777,7 @@
     issues = [];
     debugLines = [];
     issueHistory = [];
+    businessDateAutoResult = { status: 'idle', detailCount: 0, detections: [] };
     fileList.innerHTML = '';
     resultBody.innerHTML = '';
     warnBox.innerHTML = '';
@@ -1450,6 +1452,225 @@
     return cards;
   }
 
+  function findWideRedBand(frame) {
+    const scanY0 = clamp(Math.round(frame.height * 0.12), 0, frame.height - 1);
+    const scanY1 = clamp(Math.round(frame.height * 0.45), scanY0 + 1, frame.height);
+    const x0 = clamp(Math.round(frame.width * 0.02), 0, frame.width - 1);
+    const x1 = clamp(Math.round(frame.width * 0.98), x0 + 1, frame.width);
+    const stepX = Math.max(2, Math.round(4 * frame.scale));
+    const mask = [];
+
+    for (let y = scanY0; y < scanY1; y++) {
+      let red = 0, total = 0;
+      for (let x = x0; x < x1; x += stepX) {
+        const [r, g, b] = rgbAt(frame, x, y);
+        if (r >= 190 && g <= 100 && b <= 125 && r - g >= 90 && r - b >= 70) red++;
+        total++;
+      }
+      mask.push(Boolean(total && red / total >= 0.60));
+    }
+
+    fillShortFalseGaps(mask, Math.max(1, Math.round(3 * frame.scale)));
+    const minHeight = Math.max(28, Math.round(35 * frame.scale));
+    const segments = [];
+    let start = null;
+    for (let i = 0; i <= mask.length; i++) {
+      const on = i < mask.length ? mask[i] : false;
+      if (on && start == null) start = i;
+      if (!on && start != null) {
+        if (i - start >= minHeight) {
+          segments.push({ y0: scanY0 + start, y1: scanY0 + i - 1 });
+        }
+        start = null;
+      }
+    }
+    if (!segments.length) return null;
+    return segments.sort((a, b) => (b.y1 - b.y0) - (a.y1 - a.y0))[0];
+  }
+
+  function findDetailBusinessDateRegion(frame) {
+    const redBand = findWideRedBand(frame);
+    if (!redBand) return null;
+
+    const y0 = clamp(redBand.y1 + Math.max(4, Math.round(5 * frame.scale)), 0, frame.height - 1);
+    const y1 = clamp(redBand.y1 + Math.max(80, Math.round(115 * frame.scale)), y0 + 1, frame.height);
+    const whiteX1 = clamp(Math.round(frame.width * 0.62), 1, frame.width);
+    const step = Math.max(2, Math.round(3 * frame.scale));
+    let white = 0, total = 0;
+    for (let y = y0; y < y1; y += step) {
+      for (let x = 0; x < whiteX1; x += step) {
+        const [r, g, b] = rgbAt(frame, x, y);
+        if (r >= 235 && g >= 235 && b >= 235) white++;
+        total++;
+      }
+    }
+    const whiteRatio = total ? white / total : 0;
+    if (whiteRatio < 0.75) return null;
+
+    return {
+      redBand,
+      whiteRatio,
+      region: {
+        x0: 0,
+        x1: Math.round(frame.width * 0.45),
+        y0,
+        y1
+      }
+    };
+  }
+
+  function findBusinessDateGlyphBoxes(frame, region) {
+    const found = darkComponents(frame, region, 110);
+    const s = frame.scale;
+    return found.comps
+      .filter(c =>
+        c.h >= Math.max(18, 24 * s) &&
+        c.h <= Math.max(64, 62 * s) &&
+        c.w >= Math.max(4, 6 * s) &&
+        c.w <= Math.max(62, 58 * s) &&
+        c.area >= Math.max(70, 120 * s * s) &&
+        c.y <= Math.max(76, 70 * s)
+      )
+      .sort((a, b) => a.x - b.x)
+      .map(c => ({
+        x0: found.x0 + c.x,
+        y0: found.y0 + c.y,
+        x1: found.x0 + c.x + c.w,
+        y1: found.y0 + c.y + c.h
+      }));
+  }
+
+  async function recognizeBusinessDateDigit(worker, frame, box) {
+    const attempts = [
+      { pad: 8, factor: 5 },
+      { pad: 10, factor: 5 },
+      { pad: 12, factor: 6 },
+      { pad: 14, factor: 7 }
+    ];
+    const votes = new Map();
+    const raws = [];
+
+    for (const a of attempts) {
+      const padded = expandBox(frame, box, a.pad * frame.scale);
+      const r = await recognizeCanvas(worker, makeCropCanvas(frame, padded, a.factor));
+      const ds = digitsOnly(r.raw);
+      raws.push((r.raw ?? '').trim());
+      if (ds.length !== 1) continue;
+      const count = (votes.get(ds) || 0) + 1;
+      votes.set(ds, count);
+      if (count >= 2) {
+        return { digit: Number(ds), raws };
+      }
+    }
+    return { digit: null, raws };
+  }
+
+  function splitBusinessDateDigits(items, scale) {
+    const digits = items.filter(x => Number.isInteger(x.digit)).sort((a, b) => a.x0 - b.x0);
+    if (digits.length < 2 || digits.length > 4) return null;
+
+    const valid = [];
+    for (let i = 1; i < digits.length; i++) {
+      const monthText = digits.slice(0, i).map(x => x.digit).join('');
+      const dayText = digits.slice(i).map(x => x.digit).join('');
+      if ((monthText.length > 1 && monthText.startsWith('0')) || (dayText.length > 1 && dayText.startsWith('0'))) continue;
+      const month = Number(monthText);
+      const day = Number(dayText);
+      if (month < 1 || month > 12 || day < 1 || day > 31) continue;
+      const gap = digits[i].x0 - digits[i - 1].x1;
+      valid.push({ month, day, splitIndex: i, gap });
+    }
+    if (!valid.length) return null;
+    valid.sort((a, b) => b.gap - a.gap);
+    if (valid.length > 1) {
+      const best = valid[0];
+      const second = valid[1];
+      const clearlySeparated = best.gap - second.gap >= Math.max(6 * scale, 5) || best.gap >= second.gap * 1.6;
+      if (!clearlySeparated) return null;
+    }
+    return valid[0];
+  }
+
+  function resolveBusinessDateYear(month, day) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let year = today.getFullYear();
+    let candidate = new Date(year, month - 1, day);
+    if (candidate.getFullYear() !== year || candidate.getMonth() !== month - 1 || candidate.getDate() !== day) return null;
+    if (candidate > today) {
+      year--;
+      candidate = new Date(year, month - 1, day);
+      if (candidate.getFullYear() !== year || candidate.getMonth() !== month - 1 || candidate.getDate() !== day) return null;
+    }
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${year}-${pad(month)}-${pad(day)}`;
+  }
+
+  async function recognizeBusinessDateFromFrames(worker, frames) {
+    const details = [];
+    for (const frame of frames) {
+      const detail = findDetailBusinessDateRegion(frame);
+      if (detail) details.push({ frame, detail });
+    }
+
+    const result = { status: 'unreadable', detailCount: details.length, detections: [] };
+    if (!details.length) {
+      debugLines.push('営業日自動取得: 詳細画面を検出できず');
+      return result;
+    }
+
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_CHAR ?? '10' });
+    for (let i = 0; i < details.length; i++) {
+      const { frame, detail } = details[i];
+      setStatus('営業日を確認中…', `${i + 1} / ${details.length}枚`, 20 + 2 * (i / Math.max(1, details.length)));
+      const glyphs = findBusinessDateGlyphBoxes(frame, detail.region);
+      const items = [];
+      for (const box of glyphs) {
+        const r = await recognizeBusinessDateDigit(worker, frame, box);
+        items.push({ ...box, digit: r.digit, raws: r.raws });
+      }
+      const split = splitBusinessDateDigits(items, frame.scale);
+      if (!split) {
+        debugLines.push(`${frame.file.name}: 詳細画面 / 営業日判定失敗 / glyphs=${glyphs.length} / digits=${items.filter(x => Number.isInteger(x.digit)).map(x => x.digit).join('') || '-'}`);
+        continue;
+      }
+      const resolved = resolveBusinessDateYear(split.month, split.day);
+      if (!resolved) {
+        debugLines.push(`${frame.file.name}: 詳細画面 / 営業日不正 ${split.month}/${split.day}`);
+        continue;
+      }
+      result.detections.push({ fileName: frame.file.name, month: split.month, day: split.day, resolved });
+      debugLines.push(`${frame.file.name}: 詳細画面 / 営業日 ${split.month}/${split.day} -> ${resolved}`);
+    }
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+
+    const unique = [...new Set(result.detections.map(x => x.resolved))];
+    if (!unique.length) {
+      result.status = 'unreadable';
+      debugLines.push('営業日自動取得: 詳細画面は検出したが日付を確定できず');
+      return result;
+    }
+    if (unique.length > 1) {
+      result.status = 'conflict';
+      debugLines.push(`営業日自動取得: 複数日を検出 ${unique.join(', ')}`);
+      return result;
+    }
+
+    result.status = 'set';
+    result.value = unique[0];
+    businessDate.value = unique[0];
+    debugLines.push(`営業日自動取得: ${unique[0]}`);
+    return result;
+  }
+
+  function notifyBusinessDateAutoResult() {
+    if (businessDateAutoResult.status === 'unreadable') {
+      showToast('営業日を画像から取得できませんでした。日付は変更していません。', 'info', 4200);
+    } else if (businessDateAutoResult.status === 'conflict') {
+      showToast('営業日が複数検出されました。日付は変更していません。', 'info', 4200);
+    }
+  }
+
   async function recognizeCanvas(worker, canvas) {
     if (!canvas) return { value: null, confidence: null, raw: '' };
     const res = await worker.recognize(canvas);
@@ -1826,6 +2047,14 @@
     lines.push('PAC Reader 診断');
     lines.push(`version: ${APP_VERSION}`);
     lines.push(`営業日: ${businessDate.value || '(未選択)'}`);
+    if (businessDateAutoResult.status === 'set') {
+      const sources = businessDateAutoResult.detections.map(x => x.fileName).join(', ');
+      lines.push(`営業日自動取得: ${businessDateAutoResult.value}${sources ? ` (${sources})` : ''}`);
+    } else if (businessDateAutoResult.status === 'conflict') {
+      lines.push('営業日自動取得: 複数日検出・未変更');
+    } else if (businessDateAutoResult.status === 'unreadable') {
+      lines.push('営業日自動取得: 取得できず・未変更');
+    }
     lines.push(`状態: ${hasReadingIssue() ? '読み取り異常' : '正常'}`);
     lines.push(`画像数: ${selectedFiles.length}`);
     lines.push(`最終件数: ${mergedRows.length}`);
@@ -1970,6 +2199,7 @@
     warnings = [];
     issues = [];
     issueHistory = [];
+    businessDateAutoResult = { status: 'idle', detailCount: 0, detections: [] };
     debugLines = [];
     mergedRows = [];
     const started = performance.now();
@@ -1987,7 +2217,6 @@
 
       const allCards = [];
       frames.forEach((frame, i) => allCards.push(...prepareFrame(frame, i)));
-      if (!allCards.length) throw new Error('読み取り領域を検出できませんでした。対応レイアウトの画像か確認してください。');
       debugLines.push(`検出項目合計: ${allCards.length}`);
 
       if (!window.Tesseract) throw new Error('Tesseract.jsを読み込めませんでした。通信状態を確認してください。');
@@ -2006,6 +2235,9 @@
         tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8',
         user_defined_dpi: '300'
       });
+
+      businessDateAutoResult = await recognizeBusinessDateFromFrames(worker, frames);
+      if (!allCards.length) throw new Error('読み取り領域を検出できませんでした。対応レイアウトの画像か確認してください。');
 
       let done = 0;
       const totalJobs = allCards.length * 3;
@@ -2068,6 +2300,7 @@
       }
       setStatus('完了', `${mergedRows.length}件 / ${elapsed}秒`, 100);
       renderResults();
+      notifyBusinessDateAutoResult();
       resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     } catch (err) {
       console.error(err);
@@ -2077,6 +2310,7 @@
       addIssue('fatal', message);
       warnings = issues.map(i => i.message);
       renderResults();
+      notifyBusinessDateAutoResult();
     } finally {
       if (worker) {
         try { await worker.terminate(); } catch (_) {}
