@@ -977,6 +977,28 @@
     return { top: groups[0].y0, bottom: groups[1].y1 };
   }
 
+  // 画面最下段で下側罫線が隠れたカードだけを救済する。
+  // 高さは同じ画像で完全検出した2列カードから求め、数値は必ず画像そのものをOCRする。
+  function findEdgeBodyBounds(frame, x0, x1, titleEnd, knownHeights) {
+    if (knownHeights.length < 2) return null;
+    const heights = [...knownHeights].sort((a, b) => a - b);
+    const typical = heights[Math.floor(heights.length / 2)];
+    const startY = titleEnd + 1;
+    const stopY = Math.min(frame.height - 1, titleEnd + Math.round(28 * frame.scale));
+    let top = null;
+    for (let y = startY; y <= stopY; y++) {
+      if (darkRowFraction(frame, y, x0, x1) > 0.88) {
+        top = y;
+        break;
+      }
+    }
+    if (top == null) return null;
+    const bottom = top + typical - 1;
+    // 期待する数値領域自体が画面外にある候補は作らない。
+    if (bottom >= frame.height) return null;
+    return { top, bottom };
+  }
+
   function verticalDarkFraction(frame, x, y0, y1) {
     const span = Math.max(1, Math.round(1 * frame.scale));
     const stepY = Math.max(1, Math.round(2 * frame.scale));
@@ -1216,6 +1238,22 @@
       yMin = H * 0.25; hMin = Math.max(18, H * 0.12); aMin = Math.max(80, H * 0.65);
     }
     return unionComponentBox(frame, region, c => c.y >= yMin && c.h >= hMin && c.area >= aMin, 6 * frame.scale);
+  }
+
+  // 外枠見切れの数値はカラー画像と二値化画像の2回のOCRが一致した場合だけ採用。
+  // それぞれ高信頼度で一致しなければ未読として扱い、推測で埋めない。
+  async function recognizeEdgeValue(worker, card, key, box) {
+    const attempts = key === 'valueA' ? card.valueAAttempts : card.valueBAttempts;
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    const original = await recognizeCanvas(worker, makeCropCanvas(card.frame, box, 4));
+    const binary = await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, box, 180, 5));
+    attempts.push({ method: 'edge-original', raw: original.raw.trim(), confidence: original.confidence });
+    attempts.push({ method: 'edge-binary', raw: binary.raw.trim(), confidence: binary.confidence });
+    if (original.value != null && original.value === binary.value &&
+        (original.confidence ?? 0) >= 65 && (binary.confidence ?? 0) >= 65) {
+      return { value: original.value, confidence: Math.min(original.confidence, binary.confidence) };
+    }
+    return { value: null, confidence: null };
   }
 
   function makeCropCanvas(frame, box, factor = 4) {
@@ -1466,12 +1504,22 @@
         const titleBox = seg.titleBox || (allowTitleFallback ? fallbackTitleBox(frame, seg) : null);
         if (!titleBox) return;
 
-        const body = findBodyBounds(frame, x0, x1, titleEnd);
+        const completeBody = findBodyBounds(frame, x0, x1, titleEnd);
+        const knownHeights = cards
+          .filter(c => c.kind === 'half' && c.captureState === 'complete')
+          .map(c => c.bottom - c.top + 1);
+        const edgeBody = !completeBody && kind === 'half' &&
+          row === rows[rows.length - 1]
+          ? findEdgeBodyBounds(frame, x0, x1, titleEnd, knownHeights)
+          : null;
+        const body = completeBody || edgeBody;
         if (!body) {
-          // 画面端にタイトル帯しか写っていない候補は採用しない。
-          // 次の重なり画像に完全版がある前提で、誤OCRによる誤った項目番号を防ぐ。
+          // タイトルだけ・数字自体が欠けている候補は従来どおり採用しない。
           debugLines.push(`${frame.file.name}: 画面端の不完全候補を除外`);
           return;
+        }
+        if (edgeBody) {
+          debugLines.push(`${frame.file.name}: 下側罫線なしのカードを補助検出（OCR照合必須）`);
         }
 
         const card = {
@@ -1483,7 +1531,7 @@
           valueABox: null, valueBBox: null, valueA: null, valueB: null,
           valueAConfidence: null, valueBConfidence: null,
           valueAAttempts: [], valueBAttempts: [],
-          captureState: 'complete',
+          captureState: edgeBody ? 'edge' : 'complete',
           errors: []
         };
 
@@ -1708,7 +1756,7 @@
   }
 
   function isUsableComplete(card) {
-    return card.captureState === 'complete' &&
+    return (card.captureState === 'complete' || card.captureState === 'edge') &&
       Number.isInteger(card.itemNumber) &&
       Number.isInteger(card.valueA) &&
       Number.isInteger(card.valueB);
@@ -1717,6 +1765,7 @@
   function candidateScore(card) {
     let score = 0;
     if (card.captureState === 'complete') score += 1000;
+    else if (card.captureState === 'edge') score += 500;
     if (Number.isInteger(card.valueA)) score += 100;
     if (Number.isInteger(card.valueB)) score += 100;
     if (Number.isInteger(card.itemNumber)) score += 50;
@@ -1758,7 +1807,12 @@
     const rows = [];
 
     for (const [itemNumber, candidates] of groups.entries()) {
-      const usable = candidates.filter(isUsableComplete);
+      // 1枚でも完全カードがあれば、見切れ候補を採否判定に混ぜない。
+      const full = candidates.filter(c => c.captureState === 'complete' && isUsableComplete(c));
+      const usable = full.length ? full : candidates.filter(isUsableComplete);
+      if (full.length && candidates.some(c => c.captureState === 'edge')) {
+        debugLines.push(`${itemNumber}: 完全カードを優先し見切れ候補を除外`);
+      }
       let chosen = null;
 
       if (usable.length) {
@@ -2202,7 +2256,9 @@
       for (const card of allCards) {
         progress('値Aを認識中…');
         if (card.valueABox) {
-          const r = await recognizeValueWithRetry(worker, card, 'valueA', card.valueABox);
+          const r = card.captureState === 'edge'
+            ? await recognizeEdgeValue(worker, card, 'valueA', card.valueABox)
+            : await recognizeValueWithRetry(worker, card, 'valueA', card.valueABox);
           card.valueA = r.value;
           card.valueAConfidence = r.confidence;
         }
@@ -2212,7 +2268,9 @@
       for (const card of allCards) {
         progress('値Bを認識中…');
         if (card.valueBBox) {
-          const r = await recognizeValueWithRetry(worker, card, 'valueB', card.valueBBox);
+          const r = card.captureState === 'edge'
+            ? await recognizeEdgeValue(worker, card, 'valueB', card.valueBBox)
+            : await recognizeValueWithRetry(worker, card, 'valueB', card.valueBBox);
           card.valueB = r.value;
           card.valueBConfidence = r.confidence;
         }
