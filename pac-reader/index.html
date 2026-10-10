@@ -1608,7 +1608,7 @@
       c.h >= Math.max(20 * scale, height * 0.43) &&
       c.area >= Math.max(45 * scale * scale, c.h * 2.3) &&
       c.w >= Math.max(3 * scale, c.h * 0.12) &&
-      c.w < (found.x1 - found.x0) * 0.85
+      c.w < (found.x1 - found.x0) * 0.95
     );
     if (!components.length) return [];
     const maxH = Math.max(...components.map(c => c.h));
@@ -1670,8 +1670,11 @@
 
     const completeGlyphs = glyphValues.every(v => v !== null);
     const glyphText = completeGlyphs ? glyphValues.join('') : null;
-    const wholeConsensus = validWhole.length === 2 && validWhole[0].digits === validWhole[1].digits &&
-      Math.min(validWhole[0].confidence, validWhole[1].confidence) >= 65;
+    // 大きな一文字「0」は、両手法ともテキストは正しく0なのにOCR confidenceが0になる例がある。
+    // 物理的に1文字だけ検出でき、2つの独立処理が厳密に0で一致する場合だけ例外的に採用。
+    const zeroConsensus = glyphBoxes.length === 1 && wholeOriginal.digits === '0' && wholeBinary.digits === '0';
+    const wholeConsensus = zeroConsensus || (validWhole.length === 2 && validWhole[0].digits === validWhole[1].digits &&
+      Math.min(validWhole[0].confidence, validWhole[1].confidence) >= 65);
     const conflictingWhole = glyphText !== null && validWhole.some(r => r.digits !== glyphText && (r.confidence ?? 0) >= 65);
     if (conflictingWhole) {
       attempts.push({method:'full-conflict',raw:`glyph=${glyphText};whole=${validWhole.map(r=>r.digits).join('|')}`,confidence:null});
@@ -1682,8 +1685,10 @@
       return { value: Number(glyphText), confidence: Math.min(...glyphConfs) };
     }
     if (wholeConsensus) {
-      attempts.push({method:'full-accepted-words',raw:validWhole[0].digits,confidence:Math.min(validWhole[0].confidence,validWhole[1].confidence)});
-      return { value: Number(validWhole[0].digits), confidence: Math.min(validWhole[0].confidence,validWhole[1].confidence) };
+      const acceptedValue = zeroConsensus ? '0' : validWhole[0].digits;
+      const acceptedConfidence = Math.min(wholeOriginal.confidence ?? 0, wholeBinary.confidence ?? 0);
+      attempts.push({method:zeroConsensus?'full-accepted-zero-geometry':'full-accepted-words',raw:acceptedValue,confidence:acceptedConfidence});
+      return { value: Number(acceptedValue), confidence: acceptedConfidence };
     }
     attempts.push({method:'full-unresolved',raw:`glyph=${glyphValues.map(v=>v??'?').join('')};whole=${validWhole.map(r=>r.digits).join('|')}`,confidence:null});
     return { value: null, confidence: null };
