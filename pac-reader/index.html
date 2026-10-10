@@ -566,7 +566,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261009_002213.004</p>
+    <p class="footer-note">ver 20261011_ocr-audit.001</p>
   </main>
 
   <footer class="fixed-action-bar" aria-label="固定操作">
@@ -1596,6 +1596,99 @@
     };
   }
 
+
+  // 全幅（先頭拡大表示）の数字は、文字同士が物理的に分離している。
+  // まず黒画素の連結成分で1文字ずつ分離し、桁数を独立に確認する。
+  // OCRが「26」を「206」と読んでも、2成分と3桁の矛盾を検出する。
+  function findFullDigitBoxes(frame, valueBox) {
+    const found = darkComponents(frame, valueBox, 110);
+    const height = found.y1 - found.y0;
+    const scale = frame.scale;
+    let components = found.comps.filter(c =>
+      c.h >= Math.max(20 * scale, height * 0.43) &&
+      c.area >= Math.max(45 * scale * scale, c.h * 2.3) &&
+      c.w >= Math.max(3 * scale, c.h * 0.12) &&
+      c.w < (found.x1 - found.x0) * 0.85
+    );
+    if (!components.length) return [];
+    const maxH = Math.max(...components.map(c => c.h));
+    components = components.filter(c => c.h >= maxH * 0.70).sort((a,b) => a.x - b.x);
+    if (components.length < 1 || components.length > 6) return [];
+    const centerY = components.reduce((sum,c) => sum + c.y + c.h / 2, 0) / components.length;
+    if (components.some(c => Math.abs(c.y + c.h / 2 - centerY) > maxH * 0.32)) return [];
+    const pad = Math.max(2, Math.round(3 * scale));
+    return components.map(c => ({
+      x0: Math.max(found.x0, found.x0 + c.x - pad),
+      y0: Math.max(found.y0, found.y0 + c.y - pad),
+      x1: Math.min(found.x1, found.x0 + c.x + c.w + pad),
+      y1: Math.min(found.y1, found.y0 + c.y + c.h + pad)
+    }));
+  }
+
+  // 全幅カード専用。隣のセルへ拡張しない。桁数は画素連結成分で独立検証し、
+  // 各文字の2種類のOCRが一致した場合、または全体OCRの2種類が一致した場合だけ採用する。
+  async function recognizeFullValue(worker, card, key, box) {
+    const attempts = key === 'valueA' ? card.valueAAttempts : card.valueBAttempts;
+    const record = (method, r) => {
+      const raw = String(r?.raw ?? '').trim();
+      const conf = Number.isFinite(r?.confidence) ? r.confidence : null;
+      attempts.push({ method, raw, confidence: conf });
+      return {raw, digits: digitsOnly(raw), confidence: conf};
+    };
+    const glyphBoxes = findFullDigitBoxes(card.frame, box);
+    const bbox = glyphBoxes.map(g => [g.x0,g.y0,g.x1,g.y1].map(Math.round).join(',')).join(';');
+    attempts.push({ method: 'full-geometry', raw: glyphBoxes.length ? `glyphs=${glyphBoxes.length};boxes=${bbox}` : 'glyphs=unresolved', confidence: null });
+    if (!glyphBoxes.length) return { value: null, confidence: null };
+
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    const wholeOriginal = record('full-word-original', await recognizeCanvas(worker, makeCropCanvas(card.frame, box, 4)));
+    const wholeBinary = record('full-word-binary', await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, box, 180, 5)));
+
+    const validWhole = [wholeOriginal, wholeBinary].filter(r =>
+      r.digits.length === glyphBoxes.length && /^\d+$/.test(r.digits) && (r.confidence ?? 0) >= 45
+    );
+    const invalidLength = [wholeOriginal, wholeBinary].filter(r => r.digits.length > 0 && r.digits.length !== glyphBoxes.length);
+    if (invalidLength.length) {
+      attempts.push({method:'full-reject-extra-digits',raw:invalidLength.map(r => r.raw).join(' | '),confidence:null});
+    }
+
+    const glyphValues = [], glyphConfs = [];
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_CHAR ?? '10' });
+    for (let i = 0; i < glyphBoxes.length; i++) {
+      const glyph = glyphBoxes[i];
+      const original = record(`full-digit-${i}-original`, await recognizeCanvas(worker, makeCropCanvas(card.frame, glyph, 5)));
+      const binary = record(`full-digit-${i}-binary`, await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, glyph, 180, 5)));
+      const good = r => r.digits.length === 1 && (r.confidence ?? 0) >= 30;
+      if (good(original) && good(binary) && original.digits === binary.digits) {
+        glyphValues.push(original.digits);
+        glyphConfs.push(Math.min(original.confidence, binary.confidence));
+      } else {
+        glyphValues.push(null);
+      }
+    }
+    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+
+    const completeGlyphs = glyphValues.every(v => v !== null);
+    const glyphText = completeGlyphs ? glyphValues.join('') : null;
+    const wholeConsensus = validWhole.length === 2 && validWhole[0].digits === validWhole[1].digits &&
+      Math.min(validWhole[0].confidence, validWhole[1].confidence) >= 65;
+    const conflictingWhole = glyphText !== null && validWhole.some(r => r.digits !== glyphText && (r.confidence ?? 0) >= 65);
+    if (conflictingWhole) {
+      attempts.push({method:'full-conflict',raw:`glyph=${glyphText};whole=${validWhole.map(r=>r.digits).join('|')}`,confidence:null});
+      return { value: null, confidence: null };
+    }
+    if (glyphText !== null) {
+      attempts.push({method:'full-accepted-glyphs',raw:glyphText,confidence:Math.min(...glyphConfs)});
+      return { value: Number(glyphText), confidence: Math.min(...glyphConfs) };
+    }
+    if (wholeConsensus) {
+      attempts.push({method:'full-accepted-words',raw:validWhole[0].digits,confidence:Math.min(validWhole[0].confidence,validWhole[1].confidence)});
+      return { value: Number(validWhole[0].digits), confidence: Math.min(validWhole[0].confidence,validWhole[1].confidence) };
+    }
+    attempts.push({method:'full-unresolved',raw:`glyph=${glyphValues.map(v=>v??'?').join('')};whole=${validWhole.map(r=>r.digits).join('|')}`,confidence:null});
+    return { value: null, confidence: null };
+  }
+
   async function recognizeValueWithRetry(worker, card, key, box) {
     const attemptsKey = key === 'valueA' ? 'valueAAttempts' : 'valueBAttempts';
     if (!Array.isArray(card[attemptsKey])) card[attemptsKey] = [];
@@ -1949,7 +2042,7 @@
 
     renderWarnings();
     updateTsv();
-    debugText.textContent = debugLines.join('\n');
+    debugText.textContent = buildDiagnosticText();
     resultsCard.hidden = false;
   }
 
@@ -2258,7 +2351,9 @@
         if (card.valueABox) {
           const r = card.captureState === 'edge'
             ? await recognizeEdgeValue(worker, card, 'valueA', card.valueABox)
-            : await recognizeValueWithRetry(worker, card, 'valueA', card.valueABox);
+            : card.kind === 'full'
+              ? await recognizeFullValue(worker, card, 'valueA', card.valueABox)
+              : await recognizeValueWithRetry(worker, card, 'valueA', card.valueABox);
           card.valueA = r.value;
           card.valueAConfidence = r.confidence;
         }
@@ -2270,7 +2365,9 @@
         if (card.valueBBox) {
           const r = card.captureState === 'edge'
             ? await recognizeEdgeValue(worker, card, 'valueB', card.valueBBox)
-            : await recognizeValueWithRetry(worker, card, 'valueB', card.valueBBox);
+            : card.kind === 'full'
+              ? await recognizeFullValue(worker, card, 'valueB', card.valueBBox)
+              : await recognizeValueWithRetry(worker, card, 'valueB', card.valueBBox);
           card.valueB = r.value;
           card.valueBConfidence = r.confidence;
         }
@@ -2289,13 +2386,14 @@
           ? ` | attempts=${c.itemAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
           : '';
         const valueAAttempts = c.valueAAttempts?.length
-          ? ` | valueA-attempts=${c.valueAAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
+          ? ` | valueA-attempts=${c.valueAAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}(${Math.round(a.confidence ?? 0)})`).join(',')}`
           : '';
         const valueBAttempts = c.valueBAttempts?.length
-          ? ` | valueB-attempts=${c.valueBAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}`).join(',')}`
+          ? ` | valueB-attempts=${c.valueBAttempts.map(a => `${a.method}:${JSON.stringify(a.raw)}(${Math.round(a.confidence ?? 0)})`).join(',')}`
           : '';
         const errorDetail = c.errors.length ? ` | errors=${c.errors.join(' / ')}` : '';
-        debugLines.push(`${c.fileName} | ${c.itemNumber ?? '?'} [${itemDetail}] | valueA=${c.valueA ?? '?'} (${Math.round(c.valueAConfidence ?? 0)}) | valueB=${c.valueB ?? '?'} (${Math.round(c.valueBConfidence ?? 0)}) | ${c.kind} | ${c.captureState}${attempts}${valueAAttempts}${valueBAttempts}${errorDetail}`);
+        const boxInfo = ` | boxes=A:${c.valueABox ? [c.valueABox.x0,c.valueABox.y0,c.valueABox.x1,c.valueABox.y1].map(Math.round).join(',') : '-'} B:${c.valueBBox ? [c.valueBBox.x0,c.valueBBox.y0,c.valueBBox.x1,c.valueBBox.y1].map(Math.round).join(',') : '-'}`;
+      debugLines.push(`${c.fileName} | ${c.itemNumber ?? '?'} [${itemDetail}] | valueA=${c.valueA ?? '?'} (${Math.round(c.valueAConfidence ?? 0)}) | valueB=${c.valueB ?? '?'} (${Math.round(c.valueBConfidence ?? 0)}) | ${c.kind} | ${c.captureState}${boxInfo}${attempts}${valueAAttempts}${valueBAttempts}${errorDetail}`);
       }
       setStatus('完了', `${mergedRows.length}件 / ${elapsed}秒`, 100);
       renderResults();
