@@ -566,7 +566,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261011_full-ocr.001</p>
+    <p class="footer-note">ver 20261013_full-ocr.002</p>
   </main>
 
   <footer class="fixed-action-bar" aria-label="固定操作">
@@ -626,7 +626,7 @@
   let issueHistory = [];
   let businessDateAutoStatus = '未実行';
   let businessDateAutoSource = '';
-  const APP_VERSION = '20261011_full-ocr.001';
+  const APP_VERSION = '20261013_full-ocr.002';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -1652,12 +1652,13 @@
       attempts.push({method:'full-reject-extra-digits',raw:invalidLength.map(r => r.raw).join(' | '),confidence:null});
     }
 
-    const glyphValues = [], glyphConfs = [];
+    const glyphValues = [], glyphConfs = [], glyphObservations = [];
     await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_CHAR ?? '10' });
     for (let i = 0; i < glyphBoxes.length; i++) {
       const glyph = glyphBoxes[i];
       const original = record(`full-digit-${i}-original`, await recognizeCanvas(worker, makeCropCanvas(card.frame, glyph, 5)));
       const binary = record(`full-digit-${i}-binary`, await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, glyph, 180, 5)));
+      glyphObservations.push([original, binary]);
       const good = r => r.digits.length === 1 && (r.confidence ?? 0) >= 30;
       if (good(original) && good(binary) && original.digits === binary.digits) {
         glyphValues.push(original.digits);
@@ -1689,6 +1690,40 @@
       const acceptedConfidence = Math.min(wholeOriginal.confidence ?? 0, wholeBinary.confidence ?? 0);
       attempts.push({method:zeroConsensus?'full-accepted-zero-geometry':'full-accepted-words',raw:acceptedValue,confidence:acceptedConfidence});
       return { value: Number(acceptedValue), confidence: acceptedConfidence };
+    }
+    // 元画像/二値化の最初の2方式が片方しか認識できない場合に限り、PSMを
+    // SINGLE_LINEへ切り替えて追加照合する（例: 全幅1桁「9」の片方だけ欠落）。
+    // 物理的な桁数・高信頼度の反対意見は維持し、1回の高信頼度OCRだけでは確定しない。
+    if (glyphText === null) {
+      const strongWords = [wholeOriginal, wholeBinary].filter(r =>
+        r.digits.length === glyphBoxes.length && (r.confidence ?? 0) >= 80
+      );
+      if (strongWords.length === 1) {
+        const target = strongWords[0].digits;
+        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_LINE ?? '7' });
+        const lineOriginal = record('full-line-original', await recognizeCanvas(worker, makeCropCanvas(card.frame, box, 5)));
+        const lineBinary = record('full-line-binary-195', await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, box, 195, 5)));
+        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+
+        const validLine = r => r.digits.length === glyphBoxes.length && (r.confidence ?? 0) >= 80;
+        const supported = [lineOriginal, lineBinary].some(r => validLine(r) && r.digits === target);
+        const contraryWords = [wholeOriginal, wholeBinary, lineOriginal, lineBinary].some(r =>
+          r.digits.length === glyphBoxes.length && (r.confidence ?? 0) >= 65 && r.digits !== target
+        );
+        const contraryGlyph = glyphObservations.some((observations, i) =>
+          observations.some(r => r.digits.length === 1 &&
+            (r.confidence ?? 0) >= 80 && r.digits !== target[i])
+        );
+        if (supported && !contraryWords && !contraryGlyph) {
+          const agreed = [strongWords[0], lineOriginal, lineBinary]
+            .filter(r => validLine(r) && r.digits === target);
+          const confidence = Math.min(...agreed.map(r => r.confidence));
+          attempts.push({method:'full-accepted-line-confirmed',raw:target,confidence});
+          return { value: Number(target), confidence };
+        }
+        attempts.push({method:'full-line-not-confirmed',
+          raw:`candidate=${target};line=${lineOriginal.digits}/${lineBinary.digits};conflict=${contraryWords||contraryGlyph}`,confidence:null});
+      }
     }
     attempts.push({method:'full-unresolved',raw:`glyph=${glyphValues.map(v=>v??'?').join('')};whole=${validWhole.map(r=>r.digits).join('|')}`,confidence:null});
     return { value: null, confidence: null };
