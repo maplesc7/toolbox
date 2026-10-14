@@ -566,7 +566,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261013_full-ocr.002</p>
+    <p class="footer-note">ver 20261014_operation-date.003</p>
   </main>
 
   <footer class="fixed-action-bar" aria-label="固定操作">
@@ -624,9 +624,10 @@
   let busy = false;
   let toastTimer = null;
   let issueHistory = [];
+  let businessDateManuallySelected = false;
   let businessDateAutoStatus = '未実行';
   let businessDateAutoSource = '';
-  const APP_VERSION = '20261013_full-ocr.002';
+  const APP_VERSION = '20261014_operation-date.003';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -659,6 +660,13 @@
     const d = new Date();
     const pad = (n) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  // PAC送信ではZIP名の操作日、ブラウザで直接使う場合は画像を選択した端末の当日。
+  function operationDayString() {
+    const fromUpload = window.__PAC_OPERATION_DATE__;
+    return /^\d{4}-\d{2}-\d{2}$/.test(String(fromUpload || ''))
+      ? fromUpload : localTodayString();
   }
 
   function businessDateIsValid() {
@@ -765,6 +773,7 @@
   });
 
   businessDate.addEventListener('change', () => {
+    businessDateManuallySelected = true;
     updateTsv();
     if (resultsCard.hidden === false) debugText.textContent = buildDiagnosticText();
   });
@@ -2349,6 +2358,13 @@
         allCards.push(...prepareFrame(frame, i));
       });
       if (!allCards.length) throw new Error('読み取り領域を検出できませんでした。対応レイアウトの画像か確認してください。');
+      // 日付画像がなく、先頭が台データ画面だと確認できたときだけ操作日を採用する。
+      // 手動で営業日を選択したユーザーの指定は維持する。
+      if (!firstIsDetail && allCards.some(c => c.fileIndex === 0)) {
+        if (!businessDateManuallySelected) businessDate.value = operationDayString();
+        businessDateAutoStatus = `${businessDate.value} を採用（日付画像なし）`;
+        debugLines.push(`${selectedFiles[0].name}: 台データ画像 / 日付画像なし / 営業日=${businessDate.value}`);
+      }
       debugLines.push(`検出項目合計: ${allCards.length}`);
 
       setStatus('OCRを準備中…', '初回は認識データの取得に少し時間がかかります', 20);
