@@ -566,7 +566,7 @@
       </div>
     </section>
 
-    <p class="footer-note">ver 20261014_operation-date.003</p>
+    <p class="footer-note">ver 20261015_perf-ocr.004</p>
   </main>
 
   <footer class="fixed-action-bar" aria-label="固定操作">
@@ -627,7 +627,7 @@
   let businessDateManuallySelected = false;
   let businessDateAutoStatus = '未実行';
   let businessDateAutoSource = '';
-  const APP_VERSION = '20261014_operation-date.003';
+  const APP_VERSION = '20261015_perf-ocr.004';
 
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const digitsOnly = (s) => String(s ?? '').replace(/\D/g, '');
@@ -1253,7 +1253,7 @@
   // それぞれ高信頼度で一致しなければ未読として扱い、推測で埋めない。
   async function recognizeEdgeValue(worker, card, key, box) {
     const attempts = key === 'valueA' ? card.valueAAttempts : card.valueBAttempts;
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
     const original = await recognizeCanvas(worker, makeCropCanvas(card.frame, box, 4));
     const binary = await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, box, 180, 5));
     attempts.push({ method: 'edge-original', raw: original.raw.trim(), confidence: original.confidence });
@@ -1593,6 +1593,14 @@
     return cards;
   }
 
+  // 同一workerに対する同一PSM設定の再送は省く。OCR画像・モデル・閾値・判定処理は不変。
+  const ocrPsmByWorker = new WeakMap();
+  async function setOcrPsm(worker, mode) {
+    if (ocrPsmByWorker.get(worker) === mode) return;
+    await worker.setParameters({ tessedit_pageseg_mode: mode });
+    ocrPsmByWorker.set(worker, mode);
+  }
+
   async function recognizeCanvas(worker, canvas) {
     if (!canvas) return { value: null, confidence: null, raw: '' };
     const res = await worker.recognize(canvas);
@@ -1649,7 +1657,7 @@
     attempts.push({ method: 'full-geometry', raw: glyphBoxes.length ? `glyphs=${glyphBoxes.length};boxes=${bbox}` : 'glyphs=unresolved', confidence: null });
     if (!glyphBoxes.length) return { value: null, confidence: null };
 
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
     const wholeOriginal = record('full-word-original', await recognizeCanvas(worker, makeCropCanvas(card.frame, box, 4)));
     const wholeBinary = record('full-word-binary', await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, box, 180, 5)));
 
@@ -1662,7 +1670,7 @@
     }
 
     const glyphValues = [], glyphConfs = [], glyphObservations = [];
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_CHAR ?? '10' });
+    await setOcrPsm(worker, Tesseract.PSM?.SINGLE_CHAR ?? '10');
     for (let i = 0; i < glyphBoxes.length; i++) {
       const glyph = glyphBoxes[i];
       const original = record(`full-digit-${i}-original`, await recognizeCanvas(worker, makeCropCanvas(card.frame, glyph, 5)));
@@ -1676,7 +1684,7 @@
         glyphValues.push(null);
       }
     }
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
 
     const completeGlyphs = glyphValues.every(v => v !== null);
     const glyphText = completeGlyphs ? glyphValues.join('') : null;
@@ -1709,10 +1717,10 @@
       );
       if (strongWords.length === 1) {
         const target = strongWords[0].digits;
-        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_LINE ?? '7' });
+        await setOcrPsm(worker, Tesseract.PSM?.SINGLE_LINE ?? '7');
         const lineOriginal = record('full-line-original', await recognizeCanvas(worker, makeCropCanvas(card.frame, box, 5)));
         const lineBinary = record('full-line-binary-195', await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, box, 195, 5)));
-        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+        await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
 
         const validLine = r => r.digits.length === glyphBoxes.length && (r.confidence ?? 0) >= 80;
         const supported = [lineOriginal, lineBinary].some(r => validLine(r) && r.digits === target);
@@ -1755,7 +1763,7 @@
     };
     const strong = (r) => r.value != null && (r.confidence ?? 0) >= 35;
 
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
     let r = record('primary', await recognizeCanvas(worker, makeCropCanvas(card.frame, box, 4)));
     if (strong(r)) return r;
 
@@ -1772,18 +1780,18 @@
     const boxH = Math.max(1, box.y1 - box.y0);
     const singleLike = boxW <= boxH * 0.92;
     if (singleLike) {
-      await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_CHAR ?? '10' });
+      await setOcrPsm(worker, Tesseract.PSM?.SINGLE_CHAR ?? '10');
       r = record('retry-single-char-padded', await recognizeCanvas(worker, makeCropCanvas(card.frame, paddedBox, 6)));
       if (!strong(r)) {
         r = record('retry-single-char-binary', await recognizeCanvas(worker, makeDarkBinaryCanvas(card.frame, binaryBox, 195, 6)));
       }
       if (strong(r)) {
-        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+        await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
         return r;
       }
     }
 
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
 
     const valid = tried.filter(x => x.value != null);
     if (!valid.length) return { value: null, confidence: null, raw: '' };
@@ -1834,12 +1842,12 @@
     }
 
     // 一次認識に失敗した項目だけ、閾値とPSMを変えて再試行する。
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_LINE ?? '7' });
+    await setOcrPsm(worker, Tesseract.PSM?.SINGLE_LINE ?? '7');
     const retryLow = makeTitleOcrCanvas(card.frame, card.titleBox, 175, 5);
     if (retryLow.canvas) {
       const r = await recognizeCanvas(worker, retryLow.canvas);
       if (assignItemResult(card, r, 'retry-175')) {
-        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+        await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
         return;
       }
     }
@@ -1848,12 +1856,12 @@
     if (retryHigh.canvas) {
       const r = await recognizeCanvas(worker, retryHigh.canvas);
       if (assignItemResult(card, r, 'retry-205')) {
-        await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+        await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
         return;
       }
     }
 
-    await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+    await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
     card.itemMethod = 'unresolved';
   }
 
@@ -2382,6 +2390,8 @@
         tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8',
         user_defined_dpi: '300'
       });
+      // 初期OCR設定はSINGLE_WORD。重複する再設定だけをスキップする。
+      ocrPsmByWorker.set(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
 
       let done = 0;
       const totalJobs = allCards.length * 3;
@@ -2395,13 +2405,14 @@
         progress('番号を認識中…');
         await recognizeItemNumber(worker, card);
         done++;
-        await new Promise(requestAnimationFrame);
+        // 毎項目の16ms描画待機を止め、12項目ごとにUIを更新する。
+        if (done % 12 === 0) await new Promise(requestAnimationFrame);
       }
 
       // OCRが残した空欄だけを対象に、前後から一意に決まる連番を補完する。
       inferMissingItemNumbers(allCards);
 
-      await worker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM?.SINGLE_WORD ?? '8' });
+      await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
       for (const card of allCards) {
         progress('値Aを認識中…');
         if (card.valueABox) {
@@ -2414,7 +2425,8 @@
           card.valueAConfidence = r.confidence;
         }
         done++;
-        await new Promise(requestAnimationFrame);
+        // 毎項目の16ms描画待機を止め、12項目ごとにUIを更新する。
+        if (done % 12 === 0) await new Promise(requestAnimationFrame);
       }
       for (const card of allCards) {
         progress('値Bを認識中…');
@@ -2428,7 +2440,8 @@
           card.valueBConfidence = r.confidence;
         }
         done++;
-        await new Promise(requestAnimationFrame);
+        // 毎項目の16ms描画待機を止め、12項目ごとにUIを更新する。
+        if (done % 12 === 0) await new Promise(requestAnimationFrame);
       }
 
       mergedRows = mergeEntries(allCards);
