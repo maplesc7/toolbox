@@ -1642,6 +1642,25 @@
     }));
   }
 
+  // 全幅1桁「9」の独立した形状検証。0と異なり下半分の左側が開く。
+  // OCR信頼度だけで9に決め打ちしないため、元画像の画素形状で裏付ける。
+  function hasNineLowerOpening(frame, box) {
+    const w = box.x1 - box.x0, h = box.y1 - box.y0;
+    if (w < 12 || h < 20) return false;
+    const darkFraction = (left, right) => {
+      let dark = 0, count = 0;
+      const step = Math.max(1, Math.floor(frame.scale));
+      for (let y = Math.floor(box.y0 + h * 0.61); y < Math.ceil(box.y0 + h * 0.72); y += step) {
+        for (let x = Math.floor(box.x0 + w * left); x < Math.ceil(box.x0 + w * right); x += step) {
+          if (lumaAt(frame, x, y) < 110) dark++;
+          count++;
+        }
+      }
+      return count ? dark / count : 0;
+    };
+    return darkFraction(0.08, 0.32) < 0.16 && darkFraction(0.68, 0.92) > 0.30;
+  }
+
   // 全幅カード専用。隣のセルへ拡張しない。桁数は画素連結成分で独立検証し、
   // 各文字の2種類のOCRが一致した場合、または全体OCRの2種類が一致した場合だけ採用する。
   async function recognizeFullValue(worker, card, key, box) {
@@ -1740,6 +1759,18 @@
         }
         attempts.push({method:'full-line-not-confirmed',
           raw:`candidate=${target};line=${lineOriginal.digits}/${lineBinary.digits};conflict=${contraryWords||contraryGlyph}`,confidence:null});
+      }
+    }
+    // 正解9の既知例(228番): 二値化9(92)、単字0(41)、原画像欠落。
+    // 強い9候補・別方式の強い反証なし・元画像の9形状を全て満たすときだけ採用。
+    if (glyphBoxes.length === 1) {
+      const nine = [wholeOriginal, wholeBinary].find(r => r.digits === '9' && (r.confidence ?? 0) >= 85);
+      const contrary = [wholeOriginal, wholeBinary, ...glyphObservations.flat()].some(r =>
+        r.digits.length === 1 && r.digits !== '9' && (r.confidence ?? 0) >= 65
+      );
+      if (nine && !contrary && hasNineLowerOpening(card.frame, glyphBoxes[0])) {
+        attempts.push({ method: 'full-accepted-nine-shape', raw: '9', confidence: nine.confidence });
+        return { value: 9, confidence: nine.confidence };
       }
     }
     attempts.push({method:'full-unresolved',raw:`glyph=${glyphValues.map(v=>v??'?').join('')};whole=${validWhole.map(r=>r.digits).join('|')}`,confidence:null});
@@ -2316,6 +2347,7 @@
     issueHistory = [];
     debugLines = [];
     mergedRows = [];
+    window.__PAC_AUTOMATION_RESULT__ = null;
     const started = performance.now();
     let worker = null;
 
@@ -2445,6 +2477,14 @@
       }
 
       mergedRows = mergeEntries(allCards);
+      // 自動実行用の構造化結果。未確定があっても正常な台を区別できる。
+      window.__PAC_AUTOMATION_RESULT__ = {
+        rows: mergedRows.map(c => ({
+          itemNumber: c.itemNumber, valueA: c.valueA, valueB: c.valueB
+        })),
+        issues: issues.map(i => ({ type: i.type, itemNumber: i.itemNumber ?? null })),
+        detectedCards: allCards.length
+      };
       const elapsed = ((performance.now() - started) / 1000).toFixed(1);
       debugLines.push(`処理時間: ${elapsed}s`);
       for (const c of allCards) {
