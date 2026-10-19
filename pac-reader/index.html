@@ -2332,6 +2332,37 @@
   });
 
 
+  async function rescueUnresolvedCards(worker,cards) {
+    const byId=new Map();
+    for(const c of cards) {
+      if(!Number.isSafeInteger(c.itemNumber))continue;
+      if(!byId.has(c.itemNumber))byId.set(c.itemNumber,[]);
+      byId.get(c.itemNumber).push(c);
+    }
+    for(const [id,list] of byId) {
+      if(list.some(isUsableComplete))continue;
+      for(const c of list) {
+        if(c.captureState==='complete')continue;
+        for(const key of ['valueA','valueB']) {
+          if(Number.isSafeInteger(c[key]))continue;
+          const box=key==='valueA'?c.valueABox:c.valueBBox;
+          if(!box)continue;
+          const r=c.captureState==='edge'
+            ? await recognizeEdgeValue(worker,c,key,box)
+            : await recognizeValueWithRetry(worker,c,key,box);
+          if(Number.isSafeInteger(r.value)) {
+            c[key]=r.value;
+            c[key+'Confidence']=r.confidence;
+          }
+        }
+        if(c.bodyComplete && Number.isSafeInteger(c.valueA) &&
+           Number.isSafeInteger(c.valueB))c.captureState='complete';
+        if(isUsableComplete(c))break;
+      }
+      if(!list.some(isUsableComplete))debugLines.push(id+': rescue pending');
+    }
+  }
+
   async function analyzeSelectedFiles() {
     if (busy || !selectedFiles.length) return;
     busy = true;
@@ -2485,6 +2516,7 @@
         if (done % 12 === 0) await new Promise(requestAnimationFrame);
       }
 
+      await rescueUnresolvedCards(worker, allCards);
       mergedRows = mergeEntries(allCards);
       // 自動実行用の構造化結果。未確定があっても正常な台を区別できる。
       window.__PAC_AUTOMATION_RESULT__ = {
