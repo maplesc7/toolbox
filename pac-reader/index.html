@@ -2350,7 +2350,7 @@
           const r=c.captureState==='edge'
             ? await recognizeEdgeValue(worker,c,key,box)
             : await recognizeValueWithRetry(worker,c,key,box);
-          if(Number.isSafeInteger(r.value) && (c.captureState!=='complete' || ((r.confidence??0)>=90 && (key==='valueA'?c.valueAAttempts:c.valueBAttempts).filter(x=>Number(x.raw)===r.value && x.confidence>=75).length>=2))) {
+          if(Number.isSafeInteger(r.value) && (c.captureState==='edge' || (c.captureState==='partial' && (r.confidence??0)>=85) || ((r.confidence??0)>=90 && (key==='valueA'?c.valueAAttempts:c.valueBAttempts).filter(x=>Number(x.raw)===r.value && x.confidence>=75).length>=2))) {
             c[key]=r.value;
             c[key+'Confidence']=r.confidence;
           }
