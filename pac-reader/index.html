@@ -2444,10 +2444,18 @@
       // OCRが残した空欄だけを対象に、前後から一意に決まる連番を補完する。
       inferMissingItemNumbers(allCards);
 
+      // 同じ番号に完全なカードがある場合、見切れ/部分カードの値OCRは不要。
+      // 台番号のOCRは維持し、完全カード同士の値比較も従来どおり行う。
+      const completeItems = new Set(allCards
+        .filter(c => c.captureState === 'complete' && Number.isInteger(c.itemNumber))
+        .map(c => c.itemNumber));
+      const needsValues = c => !(c.captureState !== 'complete' &&
+        completeItems.has(c.itemNumber));
+
       await setOcrPsm(worker, Tesseract.PSM?.SINGLE_WORD ?? '8');
       for (const card of allCards) {
         progress('値Aを認識中…');
-        if (card.valueABox) {
+        if (card.valueABox && needsValues(card)) {
           const r = card.captureState === 'edge'
             ? await recognizeEdgeValue(worker, card, 'valueA', card.valueABox)
             : card.kind === 'full'
@@ -2462,7 +2470,7 @@
       }
       for (const card of allCards) {
         progress('値Bを認識中…');
-        if (card.valueBBox) {
+        if (card.valueBBox && needsValues(card)) {
           const r = card.captureState === 'edge'
             ? await recognizeEdgeValue(worker, card, 'valueB', card.valueBBox)
             : card.kind === 'full'
