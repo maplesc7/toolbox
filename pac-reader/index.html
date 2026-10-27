@@ -2395,44 +2395,53 @@
 
       if (!window.Tesseract) throw new Error('Tesseract.jsを読み込めませんでした。通信状態を確認してください。');
 
-      // 1枚目は単一営業日の基準画像。日本語OCRで営業日を読む。
-      // 営業日が見つかった詳細画面は台一覧としては解析しない。
-      let firstIsDetail = false;
+      // 画像の順番に関係なく営業日詳細画面を探し、台データOCRから除外する。
+      const detailIndexes = new Set();
+      const detectedDates = [];
       let dateWorker = null;
       businessDateAutoStatus = '取得できず・未変更';
-      businessDateAutoSource = selectedFiles[0]?.name || '';
+      businessDateAutoSource = '';
       try {
-        setStatus('営業日を確認中…', '1枚目の日付を読み取っています', 16);
         dateWorker = await Tesseract.createWorker('jpn', Tesseract.OEM?.LSTM_ONLY ?? 1);
-        const dateResult = await detectBusinessDateFromFirstFrame(dateWorker, frames[0]);
-        firstIsDetail = Boolean(dateResult.isDetail);
-        if (dateResult.ok && dateResult.businessDate) {
-          businessDate.value = dateResult.businessDate;
-          businessDateAutoStatus = `${dateResult.businessDate} を取得`;
-          debugLines.push(`${selectedFiles[0].name}: 詳細画面 / 営業日=${dateResult.businessDate}${dateResult.updateDate ? ` / 更新日=${dateResult.updateDate}` : ''}`);
-        } else {
-          debugLines.push(`${selectedFiles[0].name}: ${firstIsDetail ? '詳細画面' : '詳細画面未確定'} / 営業日判定失敗 / OCR=${JSON.stringify(dateResult.raw.slice(0, 140))}`);
+        for (let i = 0; i < frames.length; i++) {
+          setStatus('営業日を確認中…', `${i + 1} / ${frames.length}枚の日付を確認`, 16);
+          const frame = frames[i];
+          const result = await detectBusinessDateFromFirstFrame(dateWorker, frame);
+          if (!result.isDetail) continue;
+          detailIndexes.add(i);
+          if (!result.ok || !result.businessDate) {
+            debugLines.push(`${frame.file.name}: 詳細画面 / 営業日判定失敗 / OCR=${JSON.stringify(result.raw.slice(0,140))}`);
+            throw new Error(`営業日詳細画面の日付を確認できません: ${frame.file.name}`);
+          }
+          detectedDates.push(result.businessDate);
+          debugLines.push(`${frame.file.name}: 詳細画面 / 営業日=${result.businessDate}${result.updateDate ? ' / 更新日=' + result.updateDate : ''}`);
         }
-      } catch (dateErr) {
-        debugLines.push(`営業日自動取得エラー: ${dateErr?.message || dateErr}`);
       } finally {
         if (dateWorker) {
           try { await dateWorker.terminate(); } catch (_) {}
         }
       }
+      const uniqueDates = [...new Set(detectedDates)];
+      if (uniqueDates.length > 1) {
+        throw new Error('複数の営業日詳細画面で日付が一致しません: ' + uniqueDates.join(' / '));
+      }
+      if (uniqueDates.length === 1) {
+        businessDate.value = uniqueDates[0];
+        businessDateAutoStatus = `${uniqueDates[0]} を取得`;
+        businessDateAutoSource = [...detailIndexes].map(i => selectedFiles[i].name).join(', ');
+      }
 
       const allCards = [];
       frames.forEach((frame, i) => {
-        if (i === 0 && firstIsDetail) {
+        if (detailIndexes.has(i)) {
           debugLines.push(`${frame.file.name}: 営業日用詳細画面のため台データ解析をスキップ`);
           return;
         }
         allCards.push(...prepareFrame(frame, i));
       });
       if (!allCards.length) throw new Error('読み取り領域を検出できませんでした。対応レイアウトの画像か確認してください。');
-      // 日付画像がなく、先頭が台データ画面だと確認できたときだけ操作日を採用する。
-      // 手動で営業日を選択したユーザーの指定は維持する。
-      if (!firstIsDetail && allCards.some(c => c.fileIndex === 0)) {
+      // 詳細画像がない場合は、先頭画像が台データと確認できたときだけ操作日を採用。
+      if (!uniqueDates.length && allCards.some(c => c.fileIndex === 0)) {
         if (!businessDateManuallySelected) businessDate.value = operationDayString();
         businessDateAutoStatus = `${businessDate.value} を採用（日付画像なし）`;
         debugLines.push(`${selectedFiles[0].name}: 台データ画像 / 日付画像なし / 営業日=${businessDate.value}`);
