@@ -2415,6 +2415,9 @@
           }
           detectedDates.push(result.businessDate);
           debugLines.push(`${frame.file.name}: 詳細画面 / 営業日=${result.businessDate}${result.updateDate ? ' / 更新日=' + result.updateDate : ''}`);
+          // 営業日が確定したら、後続画像には日付OCRをかけない。
+          // 後続画像の台データ解析は、このループの後で通常どおり実施する。
+          break;
         }
       } finally {
         if (dateWorker) {
